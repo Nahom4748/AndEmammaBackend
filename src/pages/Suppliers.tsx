@@ -3,99 +3,44 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Building, Phone, Mail, MapPin } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { useState } from "react";
+import { suppliersData, Supplier } from "@/data/suppliersData";
+import { SupplierCard } from "@/components/SupplierCard";
+import { ScheduleDialog } from "@/components/ScheduleDialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Suppliers = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
 
-  const suppliers = [
-    {
-      id: 1,
-      name: "Addis Ababa University",
-      type: "Educational",
-      contact: "Dr. Alemayehu Tadese",
-      phone: "+251-11-123-4567",
-      email: "contact@aau.edu.et",
-      address: "4 Kilo Campus, Addis Ababa",
-      status: "active",
-      lastCollection: "2025-05-30",
-      totalCollections: 45,
-    },
-    {
-      id: 2,
-      name: "FDRE Ministry of Justice",
-      type: "Government",
-      contact: "Ato Bekele Mamo",
-      phone: "+251-11-234-5678",
-      email: "info@moj.gov.et",
-      address: "Main Office, Addis Ababa",
-      status: "active",
-      lastCollection: "2025-05-28",
-      totalCollections: 38,
-    },
-    {
-      id: 3,
-      name: "Ethiopian Chamber of Commerce",
-      type: "Private",
-      contact: "W/ro Hanan Ahmed",
-      phone: "+251-11-345-6789",
-      email: "contact@ethiopianchamber.com",
-      address: "Mexico Square, Addis Ababa",
-      status: "active",
-      lastCollection: "2025-05-29",
-      totalCollections: 32,
-    },
-    {
-      id: 4,
-      name: "AACA Farms Commission",
-      type: "Government",
-      contact: "Ato Samuel Kifle",
-      phone: "+251-11-456-7890",
-      email: "farms@addisababa.gov.et",
-      address: "Head Office, Addis Ababa",
-      status: "inactive",
-      lastCollection: "2025-05-15",
-      totalCollections: 28,
-    },
-    {
-      id: 5,
-      name: "Kotebe Educational University",
-      type: "Educational",
-      contact: "Dr. Meron Zeleke",
-      phone: "+251-11-567-8901",
-      email: "admin@keu.edu.et",
-      address: "Kotebe Campus, Addis Ababa",
-      status: "active",
-      lastCollection: "2025-05-27",
-      totalCollections: 25,
-    },
-  ];
+  const filteredSuppliers = suppliersData.filter(supplier => {
+    const matchesSearch = 
+      supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      supplier.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      supplier.janitor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      supplier.contact.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesType = typeFilter === "all" || supplier.type === typeFilter;
+    const matchesStatus = statusFilter === "all" || supplier.status === statusFilter;
+    
+    return matchesSearch && matchesType && matchesStatus;
+  });
 
-  const filteredSuppliers = suppliers.filter(supplier =>
-    supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    supplier.type.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const getStatusColor = (status: string) => {
-    return status === "active" 
-      ? "bg-green-100 text-green-800" 
-      : "bg-gray-100 text-gray-800";
+  const handleSchedule = (supplier: Supplier) => {
+    setSelectedSupplier(supplier);
+    setScheduleDialogOpen(true);
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case "Educational":
-        return "bg-blue-100 text-blue-800";
-      case "Government":
-        return "bg-purple-100 text-purple-800";
-      case "Private":
-        return "bg-orange-100 text-orange-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+  const handleViewDetails = (supplier: Supplier) => {
+    // Handle view details
+    console.log("View details for:", supplier.name);
   };
+
+  const supplierTypes = [...new Set(suppliersData.map(s => s.type))];
 
   return (
     <div className="p-6 space-y-6">
@@ -103,8 +48,10 @@ const Suppliers = () => {
         <div className="flex items-center gap-4">
           <SidebarTrigger />
           <div>
-            <h1 className="text-3xl font-bold">Suppliers</h1>
-            <p className="text-muted-foreground">Manage collection suppliers and organizations</p>
+            <h1 className="text-3xl font-bold">Suppliers Management</h1>
+            <p className="text-muted-foreground">
+              Manage {suppliersData.length} collection suppliers and organizations
+            </p>
           </div>
         </div>
         <Button>
@@ -116,81 +63,57 @@ const Suppliers = () => {
       {/* Search and Filter */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex gap-4">
-            <div className="flex-1 relative">
+          <div className="flex gap-4 flex-wrap">
+            <div className="flex-1 min-w-[300px] relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search suppliers by name or type..."
+                placeholder="Search by supplier name, type, janitor name, or contact..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
-            <Button variant="outline">Filter</Button>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {supplierTypes.map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
 
+      {/* Results Summary */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Showing {filteredSuppliers.length} of {suppliersData.length} suppliers
+        </p>
+      </div>
+
       {/* Suppliers Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredSuppliers.map((supplier) => (
-          <Card key={supplier.id} className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
-                  <Building className="h-5 w-5 text-muted-foreground" />
-                  <CardTitle className="text-lg">{supplier.name}</CardTitle>
-                </div>
-                <Badge className={getStatusColor(supplier.status)}>
-                  {supplier.status}
-                </Badge>
-              </div>
-              <div className="flex gap-2">
-                <Badge className={getTypeColor(supplier.type)} variant="outline">
-                  {supplier.type}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h4 className="font-medium text-sm text-muted-foreground mb-2">Contact Information</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-3 w-3" />
-                    {supplier.phone}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-3 w-3" />
-                    {supplier.email}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-3 w-3" />
-                    {supplier.address}
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Total Collections</span>
-                  <span className="font-medium">{supplier.totalCollections}</span>
-                </div>
-                <div className="flex justify-between text-sm mt-1">
-                  <span className="text-muted-foreground">Last Collection</span>
-                  <span className="font-medium">{supplier.lastCollection}</span>
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" className="flex-1">
-                  View Details
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1">
-                  Schedule
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <SupplierCard
+            key={supplier.id}
+            supplier={supplier}
+            onSchedule={handleSchedule}
+            onViewDetails={handleViewDetails}
+          />
         ))}
       </div>
 
@@ -201,6 +124,12 @@ const Suppliers = () => {
           </CardContent>
         </Card>
       )}
+
+      <ScheduleDialog
+        supplier={selectedSupplier}
+        open={scheduleDialogOpen}
+        onOpenChange={setScheduleDialogOpen}
+      />
     </div>
   );
 };
