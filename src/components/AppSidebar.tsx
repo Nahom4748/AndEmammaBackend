@@ -1,5 +1,5 @@
 
-import { Calendar, FileText, Home, Truck, Users, BarChart3 } from "lucide-react";
+import { Calendar, FileText, Home, Truck, Users, BarChart3, Shield } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -18,6 +18,11 @@ const menuItems = [
     title: "Dashboard",
     url: "/",
     icon: Home,
+  },
+  {
+    title: "Admin Dashboard",
+    url: "/admin",
+    icon: Shield,
   },
   {
     title: "Data Entry",

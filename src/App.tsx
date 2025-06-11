@@ -11,6 +11,7 @@ import DataEntry from "./pages/DataEntry";
 import Schedule from "./pages/Schedule";
 import Suppliers from "./pages/Suppliers";
 import Reports from "./pages/Reports";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <main className="flex-1 overflow-auto">
               <Routes>
                 <Route path="/" element={<Dashboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/data-entry" element={<DataEntry />} />
                 <Route path="/schedule" element={<Schedule />} />
                 <Route path="/suppliers" element={<Suppliers />} />
