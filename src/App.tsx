@@ -13,6 +13,7 @@ import Suppliers from "./pages/Suppliers";
 import Reports from "./pages/Reports";
 import AdminDashboard from "./pages/AdminDashboard";
 import Performance from "./pages/Performance";
+import MamasPerformance from "./pages/MamasPerformance";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
                 <Route path="/suppliers" element={<Suppliers />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/performance" element={<Performance />} />
+                <Route path="/mamas-performance" element={<MamasPerformance />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>

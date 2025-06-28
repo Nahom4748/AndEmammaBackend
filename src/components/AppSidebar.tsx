@@ -1,4 +1,5 @@
-import { Calendar, FileText, Home, Truck, Users, BarChart3, Shield, TrendingUp } from "lucide-react";
+
+import { Calendar, FileText, Home, Truck, Users, BarChart3, Shield, TrendingUp, Heart } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -27,6 +28,11 @@ const menuItems = [
     title: "Performance",
     url: "/performance",
     icon: TrendingUp,
+  },
+  {
+    title: "Mamas Performance",
+    url: "/mamas-performance",
+    icon: Heart,
   },
   {
     title: "Data Entry",

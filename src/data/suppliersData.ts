@@ -1,599 +1,402 @@
-export interface Supplier {
-  id: number;
-  name: string;
-  type: "Educational" | "Government" | "Private" | "Healthcare" | "Financial" | "Insurance" | "Legal";
-  contact: string;
-  phone: string;
-  email: string;
-  address: string;
-  detailedAddress: {
-    street: string;
-    subcity: string;
-    woreda: string;
-    houseNumber: string;
-    landmark?: string;
-  };
-  status: "active" | "inactive";
-  lastCollection: string;
-  totalCollections: number;
-  janitor: {
-    name: string;
-    phone: string;
-    shift: "Morning" | "Afternoon" | "Evening";
-  };
-  preferredCollectionTypes: string[];
-  notes?: string;
-  collectionSchedule: {
-    frequency: "Daily" | "Weekly" | "Bi-weekly" | "Monthly";
-    preferredDays: string[];
-    preferredTime: string;
-  };
-  followUpRequired: boolean;
-  shredderRequired: boolean;
-}
-
-export const suppliersData: Supplier[] = [
+export const suppliersData = [
   {
     id: 1,
     name: "Addis Ababa University",
-    type: "Educational",
-    contact: "Dr. Alemayehu Tadese",
-    phone: "+251-11-123-4567",
-    email: "contact@aau.edu.et",
-    address: "4 Kilo Campus, Addis Ababa",
-    detailedAddress: {
-      street: "4 Kilo Campus Main Road",
-      subcity: "Kirkos",
-      woreda: "07",
-      houseNumber: "AAU-001",
-      landmark: "Near Arat Kilo Monument"
+    type: "Educational Institution",
+    status: "active" as const,
+    address: "Algeria Street, Addis Ababa, Ethiopia - Building A, 3rd Floor, Room 301",
+    contactPerson: "Dr. Alemayehu Tekle",
+    phone: "+251-911-123-456",
+    totalCollections: 145,
+    monthlyAverage: 25,
+    collectionType: "regular" as const,
+    needsShredder: true,
+    janitor: {
+      name: "Mulugeta Haile",
+      shift: "Morning" as const,
+      phone: "+251-911-111-111"
     },
-    status: "active",
     lastCollection: "2025-05-30",
-    totalCollections: 45,
-    janitor: { name: "Ato Bekele Mamo", phone: "+251-911-234-567", shift: "Morning" },
-    preferredCollectionTypes: ["mixed", "carton", "sw"],
-    collectionSchedule: {
-      frequency: "Weekly",
-      preferredDays: ["Monday", "Friday"],
-      preferredTime: "8:00 AM - 10:00 AM"
-    },
-    followUpRequired: true,
-    shredderRequired: true,
-    notes: "Large volume expected during semester periods"
+    notes: "High volume supplier, requires weekly visits"
   },
   {
     id: 2,
     name: "FDRE Ministry of Justice",
-    type: "Government",
-    contact: "Ato Bekele Mamo",
-    phone: "+251-11-234-5678",
-    email: "info@moj.gov.et",
-    address: "Main Office, Addis Ababa",
-    detailedAddress: {
-      street: "Justice Ministry Road",
-      subcity: "Addis Ketema",
-      woreda: "03",
-      houseNumber: "MOJ-HQ",
-      landmark: "Behind Piassa Commercial Area"
+    type: "Government Office",
+    status: "active" as const,
+    address: "Meskel Square Area, Addis Ababa, Ethiopia - Justice Building, 2nd Floor",
+    contactPerson: "Ato Girma Wolde",
+    phone: "+251-911-234-567",
+    totalCollections: 128,
+    monthlyAverage: 22,
+    collectionType: "instore" as const,
+    needsShredder: true,
+    janitor: {
+      name: "Zenebech Tulu",
+      shift: "Evening" as const,
+      phone: "+251-911-222-222"
     },
-    status: "active",
-    lastCollection: "2025-05-28",
-    totalCollections: 38,
-    janitor: { name: "W/ro Hanan Ahmed", phone: "+251-911-345-678", shift: "Afternoon" },
-    preferredCollectionTypes: ["carton", "mixed"],
-    collectionSchedule: {
-      frequency: "Weekly",
-      preferredDays: ["Tuesday", "Thursday"],
-      preferredTime: "2:00 PM - 4:00 PM"
-    },
-    followUpRequired: false,
-    shredderRequired: true,
-    notes: "Confidential documents require secure handling"
+    lastCollection: "2025-05-29",
+    notes: "Government facility, requires security clearance"
   },
   {
     id: 3,
     name: "Ethiopian Chamber of Commerce",
-    type: "Private",
-    contact: "W/ro Hanan Ahmed",
-    phone: "+251-11-345-6789",
-    email: "contact@ethiopianchamber.com",
-    address: "Mexico Square, Addis Ababa",
-    detailedAddress: {
-      street: "Mexico Square Business District",
-      subcity: "Kirkos",
-      woreda: "08",
-      houseNumber: "ECC-001",
-      landmark: "Near Mexico Square Roundabout"
+    type: "Commercial Organization",
+    status: "active" as const,
+    address: "Mexico Square, Addis Ababa, Ethiopia - Chamber Building, Ground Floor",
+    contactPerson: "W/ro Meron Tadesse",
+    phone: "+251-911-345-678",
+    totalCollections: 112,
+    monthlyAverage: 19,
+    collectionType: "regular" as const,
+    needsShredder: false,
+    janitor: {
+      name: "Bekele Mekonnen",
+      shift: "Morning" as const,
+      phone: "+251-911-333-333"
     },
-    status: "active",
-    lastCollection: "2025-05-29",
-    totalCollections: 32,
-    janitor: { name: "Ato Samuel Kifle", phone: "+251-911-456-789", shift: "Morning" },
-    preferredCollectionTypes: ["carton", "mixed", "sc"],
-    collectionSchedule: {
-      frequency: "Weekly",
-      preferredDays: ["Wednesday"],
-      preferredTime: "9:00 AM - 11:00 AM"
-    },
-    followUpRequired: true,
-    shredderRequired: false
+    lastCollection: "2025-05-31",
+    notes: "Commercial papers, good quality"
   },
   {
     id: 4,
     name: "AACA Farms Commission",
-    type: "Government",
-    contact: "Ato Samuel Kifle",
-    phone: "+251-11-456-7890",
-    email: "farms@addisababa.gov.et",
-    address: "Head Office, Addis Ababa",
-    detailedAddress: {
-      street: "Head Office Building",
-      subcity: "Kirkos",
-      woreda: "04",
-      houseNumber: "AACA-001",
-      landmark: "Near AACA Headquarters"
+    type: "Government Agency",
+    status: "inactive" as const,
+    address: "Bole Road, Addis Ababa, Ethiopia - AACA Building, 1st Floor",
+    contactPerson: "Ato Tesfaye Lemma",
+    phone: "+251-911-456-789",
+    totalCollections: 95,
+    monthlyAverage: 16,
+    collectionType: "mixed" as const,
+    needsShredder: true,
+    janitor: {
+      name: "Aster Tsegaye",
+      shift: "Afternoon" as const,
+      phone: "+251-911-444-444"
     },
-    status: "active",
-    lastCollection: "2025-05-15",
-    totalCollections: 28,
-    janitor: { name: "Ato Girma Tesfaye", phone: "+251-911-567-890", shift: "Morning" },
-    preferredCollectionTypes: ["sc", "carton", "mixed"],
-    collectionSchedule: {
-      frequency: "Monthly",
-      preferredDays: ["Saturday"],
-      preferredTime: "10:00 AM - 12:00 PM"
-    },
-    followUpRequired: true,
-    shredderRequired: true
+    lastCollection: "2025-05-28",
+    notes: "Seasonal variations in paper waste"
   },
   {
     id: 5,
-    name: "Kotebe Educational University",
-    type: "Educational",
-    contact: "Dr. Meron Zeleke",
-    phone: "+251-11-567-8901",
-    email: "admin@keu.edu.et",
-    address: "Kotebe Campus, Addis Ababa",
-    detailedAddress: {
-      street: "Kotebe Campus Road",
-      subcity: "Kirkos",
-      woreda: "05",
-      houseNumber: "KEU-001",
-      landmark: "Near Kotebe University Gate"
+    name: "Kotebe University",
+    type: "Educational Institution",
+    status: "active" as const,
+    address: "Kotebe Area, Addis Ababa, Ethiopia - Main Campus, Library Building",
+    contactPerson: "Dr. Hana Getachew",
+    phone: "+251-911-567-890",
+    totalCollections: 88,
+    monthlyAverage: 15,
+    collectionType: "regular" as const,
+    needsShredder: false,
+    janitor: {
+      name: "Dereje Kebede",
+      shift: "Morning" as const,
+      phone: "+251-911-555-555"
     },
-    status: "active",
     lastCollection: "2025-05-27",
-    totalCollections: 25,
-    janitor: { name: "Ato Desta Worku", phone: "+251-911-678-901", shift: "Afternoon" },
-    preferredCollectionTypes: ["sw", "mixed", "carton"],
-    collectionSchedule: {
-      frequency: "Bi-weekly",
-      preferredDays: ["Friday", "Sunday"],
-      preferredTime: "1:00 PM - 3:00 PM"
-    },
-    followUpRequired: false,
-    shredderRequired: false
+    notes: "Student papers and documents"
   },
   {
     id: 6,
     name: "Bole Federal Supreme Court",
-    type: "Legal",
-    contact: "Judge Almaz Gebru",
-    phone: "+251-11-678-9012",
-    email: "info@supremecourt.gov.et",
-    address: "Bole, Addis Ababa",
-    detailedAddress: {
-      street: "Bole Court Road",
-      subcity: "Bole",
-      woreda: "06",
-      houseNumber: "SC-001",
-      landmark: "Near Supreme Court Building"
+    type: "Government Office",
+    status: "active" as const,
+    address: "Bole Area, Addis Ababa, Ethiopia - Court Building, Records Section",
+    contactPerson: "W/ro Selamawit Abebe",
+    phone: "+251-911-678-901",
+    totalCollections: 76,
+    monthlyAverage: 13,
+    collectionType: "instore" as const,
+    needsShredder: true,
+    janitor: {
+      name: "Tigist Lemma",
+      shift: "Evening" as const,
+      phone: "+251-911-666-666"
     },
-    status: "active",
-    lastCollection: "2025-05-02",
-    totalCollections: 22,
-    janitor: { name: "Ato Tadesse Alemu", phone: "+251-911-789-012", shift: "Morning" },
-    preferredCollectionTypes: ["carton", "mixed", "sw", "sc"],
-    collectionSchedule: {
-      frequency: "Daily",
-      preferredDays: ["Monday", "Wednesday", "Friday"],
-      preferredTime: "11:00 AM - 1:00 PM"
-    },
-    followUpRequired: true,
-    shredderRequired: true
+    lastCollection: "2025-05-26",
+    notes: "Confidential documents, shredding required"
   },
   {
     id: 7,
     name: "Federal First Instance Court Kirkos",
-    type: "Legal",
-    contact: "Judge Tekle Hailu",
-    phone: "+251-11-789-0123",
-    email: "kirkos@federalcourt.gov.et",
-    address: "Kirkos Subcity, Addis Ababa",
-    detailedAddress: {
-      street: "Kirkos Subcity Road",
-      subcity: "Kirkos",
-      woreda: "07",
-      houseNumber: "FC-001",
-      landmark: "Near Kirkos Subcity Office"
+    type: "Government Office",
+    status: "inactive" as const,
+    address: "Kirkos Area, Addis Ababa, Ethiopia - Court Building, Archive Room",
+    contactPerson: "Ato Befekadu Sileshi",
+    phone: "+251-911-789-012",
+    totalCollections: 68,
+    monthlyAverage: 11,
+    collectionType: "mixed" as const,
+    needsShredder: true,
+    janitor: {
+      name: "Elias Getahun",
+      shift: "Morning" as const,
+      phone: "+251-911-777-777"
     },
-    status: "active",
-    lastCollection: "2025-05-02",
-    totalCollections: 19,
-    janitor: { name: "W/ro Almaz Bekele", phone: "+251-911-890-123", shift: "Afternoon" },
-    preferredCollectionTypes: ["sw", "carton", "sc", "mixed"],
-    collectionSchedule: {
-      frequency: "Bi-weekly",
-      preferredDays: ["Tuesday", "Thursday", "Saturday"],
-      preferredTime: "3:00 PM - 5:00 PM"
-    },
-    followUpRequired: false,
-    shredderRequired: true
+    lastCollection: "2025-05-25",
+    notes: "Legal documents, requires careful handling"
   },
   {
     id: 8,
-    name: "Federal House Corporation Head Office",
-    type: "Government",
-    contact: "Ato Mehari Teshome",
-    phone: "+251-11-890-1234",
-    email: "info@federalhouse.gov.et",
-    address: "Head Office, Addis Ababa",
-    detailedAddress: {
-      street: "Federal House Head Office Road",
-      subcity: "Kirkos",
-      woreda: "08",
-      houseNumber: "FH-001",
-      landmark: "Near Federal House Building"
+    name: "Educational Equipment Importer",
+    type: "Commercial Organization",
+    status: "active" as const,
+    address: "Arada Area, Addis Ababa, Ethiopia - Warehouse, 2nd Floor",
+    contactPerson: "Ato Yared Tesfaye",
+    phone: "+251-911-890-123",
+    totalCollections: 62,
+    monthlyAverage: 10,
+    collectionType: "regular" as const,
+    needsShredder: false,
+    janitor: {
+      name: "Senait Desta",
+      shift: "Afternoon" as const,
+      phone: "+251-911-888-888"
     },
-    status: "active",
-    lastCollection: "2025-05-03",
-    totalCollections: 16,
-    janitor: { name: "Ato Yonas Mulatu", phone: "+251-911-901-234", shift: "Morning" },
-    preferredCollectionTypes: ["carton", "sc"],
-    collectionSchedule: {
-      frequency: "Monthly",
-      preferredDays: ["Sunday"],
-      preferredTime: "12:00 PM - 2:00 PM"
-    },
-    followUpRequired: true,
-    shredderRequired: false
+    lastCollection: "2025-05-24",
+    notes: "Packaging materials, cardboard"
   },
   {
     id: 9,
     name: "Addis Ketema Industrial College",
-    type: "Educational",
-    contact: "Dr. Fasil Demissie",
-    phone: "+251-11-901-2345",
-    email: "info@akic.edu.et",
-    address: "Addis Ketema, Addis Ababa",
-    detailedAddress: {
-      street: "Addis Ketema Campus Road",
-      subcity: "Kirkos",
-      woreda: "09",
-      houseNumber: "AKIC-001",
-      landmark: "Near AKIC Campus Gate"
+    type: "Educational Institution",
+    status: "active" as const,
+    address: "Addis Ketema, Addis Ababa, Ethiopia - College Campus, Admin Office",
+    contactPerson: "W/ro Tsion Haile",
+    phone: "+251-911-901-234",
+    totalCollections: 58,
+    monthlyAverage: 9,
+    collectionType: "regular" as const,
+    needsShredder: false,
+    janitor: {
+      name: "Fitsum Abebe",
+      shift: "Morning" as const,
+      phone: "+251-911-999-999"
     },
-    status: "active",
-    lastCollection: "2025-05-06",
-    totalCollections: 14,
-    janitor: { name: "Ato Kidane Wolde", phone: "+251-911-012-345", shift: "Evening" },
-    preferredCollectionTypes: ["np", "carton", "mixed", "sw"],
-    collectionSchedule: {
-      frequency: "Weekly",
-      preferredDays: ["Saturday"],
-      preferredTime: "5:00 PM - 7:00 PM"
-    },
-    followUpRequired: false,
-    shredderRequired: true
+    lastCollection: "2025-05-23",
+    notes: "Technical documents and papers"
   },
   {
     id: 10,
-    name: "ICS (Information Communication Solutions)",
-    type: "Private",
-    contact: "Ato Tesfaye Negash",
-    phone: "+251-11-012-3456",
-    email: "contact@ics.com.et",
-    address: "Bole, Addis Ababa",
-    detailedAddress: {
-      street: "Bole Business District",
-      subcity: "Bole",
-      woreda: "10",
-      houseNumber: "ICS-001",
-      landmark: "Near ICS Office"
+    name: "Dashin Bank Meskel Flower",
+    type: "Financial Institution",
+    status: "active" as const,
+    address: "Meskel Flower Area, Addis Ababa, Ethiopia - Bank Branch, Records Room",
+    contactPerson: "Ato Habtamu Baye",
+    phone: "+251-912-012-345",
+    totalCollections: 54,
+    monthlyAverage: 9,
+    collectionType: "instore" as const,
+    needsShredder: true,
+    janitor: {
+      name: "Rahel Teshome",
+      shift: "Evening" as const,
+      phone: "+251-912-000-000"
     },
-    status: "active",
-    lastCollection: "2025-05-07",
-    totalCollections: 12,
-    janitor: { name: "W/ro Selamawit Tadesse", phone: "+251-911-123-456", shift: "Morning" },
-    preferredCollectionTypes: ["sw", "carton"],
-    collectionSchedule: {
-      frequency: "Bi-weekly",
-      preferredDays: ["Monday", "Wednesday"],
-      preferredTime: "10:00 AM - 12:00 PM"
-    },
-    followUpRequired: true,
-    shredderRequired: false
+    lastCollection: "2025-05-22",
+    notes: "Financial records, shredding required"
   },
   {
     id: 11,
-    name: "FDRE Ministry of Justice Arada Branch",
-    type: "Government",
-    contact: "Ato Dawit Haile",
-    phone: "+251-11-123-4567",
-    email: "arada@moj.gov.et",
-    address: "Arada Subcity, Addis Ababa",
-    detailedAddress: {
-      street: "Arada Subcity Road",
-      subcity: "Arada",
-      woreda: "11",
-      houseNumber: "MOJ-ARADA",
-      landmark: "Near Arada Subcity Office"
+    name: "AA Tax Payers Merkato No 2",
+    type: "Government Office",
+    status: "active" as const,
+    address: "Merkato Area, Addis Ababa, Ethiopia - Tax Office, Filing Section",
+    contactPerson: "W/ro Eyerusalem Tamiru",
+    phone: "+251-912-123-456",
+    totalCollections: 50,
+    monthlyAverage: 8,
+    collectionType: "mixed" as const,
+    needsShredder: true,
+    janitor: {
+      name: "Dawit Lemma",
+      shift: "Morning" as const,
+      phone: "+251-912-111-111"
     },
-    status: "active",
-    lastCollection: "2025-05-07",
-    totalCollections: 11,
-    janitor: { name: "Ato Mulugeta Eshetu", phone: "+251-911-234-567", shift: "Afternoon" },
-    preferredCollectionTypes: ["carton", "mixed"],
-    collectionSchedule: {
-      frequency: "Weekly",
-      preferredDays: ["Friday"],
-      preferredTime: "3:00 PM - 5:00 PM"
-    },
-    followUpRequired: true,
-    shredderRequired: true
+    lastCollection: "2025-05-21",
+    notes: "Tax documents, requires secure disposal"
   },
   {
     id: 12,
-    name: "AA Small Tax Payers Merkato No 2",
-    type: "Government",
-    contact: "W/ro Tigist Abebe",
-    phone: "+251-11-234-5678",
-    email: "merkato2@aarevenue.gov.et",
-    address: "Merkato, Addis Ababa",
-    detailedAddress: {
-      street: "Merkato Road",
-      subcity: "Kirkos",
-      woreda: "12",
-      houseNumber: "MT-001",
-      landmark: "Near Merkato Market"
+    name: "ICS Solutions",
+    type: "Technology Company",
+    status: "active" as const,
+    address: "Bole, Addis Ababa, Ethiopia - ICS Building, 4th Floor",
+    contactPerson: "Ato Ermias Kebede",
+    phone: "+251-912-234-567",
+    totalCollections: 46,
+    monthlyAverage: 8,
+    collectionType: "regular" as const,
+    needsShredder: false,
+    janitor: {
+      name: "Haimanot Tesfaye",
+      shift: "Afternoon" as const,
+      phone: "+251-912-222-222"
     },
-    status: "active",
-    lastCollection: "2025-05-08",
-    totalCollections: 9,
-    janitor: { name: "Ato Getachew Bekele", phone: "+251-911-345-678", shift: "Morning" },
-    preferredCollectionTypes: ["carton"],
-    collectionSchedule: {
-      frequency: "Daily",
-      preferredDays: ["Tuesday"],
-      preferredTime: "9:00 AM - 11:00 AM"
-    },
-    followUpRequired: false,
-    shredderRequired: false
+    lastCollection: "2025-05-20",
+    notes: "Office papers and printouts"
   },
   {
     id: 13,
-    name: "AA Small Tax Payers Merkato No 3",
-    type: "Government",
-    contact: "Ato Solomon Mekonnen",
-    phone: "+251-11-345-6789",
-    email: "merkato3@aarevenue.gov.et",
-    address: "Merkato, Addis Ababa",
-    detailedAddress: {
-      street: "Merkato Road",
-      subcity: "Kirkos",
-      woreda: "13",
-      houseNumber: "MT-002",
-      landmark: "Near Merkato Market"
+    name: "AA Investment Commission",
+    type: "Government Agency",
+    status: "inactive" as const,
+    address: "Bole, Addis Ababa, Ethiopia - Commission Building, Archive Room",
+    contactPerson: "W/ro Senait Gebre",
+    phone: "+251-912-345-678",
+    totalCollections: 42,
+    monthlyAverage: 7,
+    collectionType: "mixed" as const,
+    needsShredder: true,
+    janitor: {
+      name: "Yonas Haile",
+      shift: "Evening" as const,
+      phone: "+251-912-333-333"
     },
-    status: "active",
-    lastCollection: "2025-05-08",
-    totalCollections: 8,
-    janitor: { name: "W/ro Rahel Teshome", phone: "+251-911-456-789", shift: "Afternoon" },
-    preferredCollectionTypes: ["mixed"],
-    collectionSchedule: {
-      frequency: "Bi-weekly",
-      preferredDays: ["Wednesday"],
-      preferredTime: "1:00 PM - 3:00 PM"
-    },
-    followUpRequired: true,
-    shredderRequired: false
+    lastCollection: "2025-05-19",
+    notes: "Investment documents, requires secure disposal"
   },
   {
     id: 14,
-    name: "Educational Equipment",
-    type: "Private",
-    contact: "Ato Bereket Wolde",
-    phone: "+251-11-456-7890",
-    email: "info@eduequip.com.et",
-    address: "Bole, Addis Ababa",
-    detailedAddress: {
-      street: "Bole Business District",
-      subcity: "Bole",
-      woreda: "14",
-      houseNumber: "EDU-001",
-      landmark: "Near Educational Equipment Office"
+    name: "Industry Park",
+    type: "Industrial Zone",
+    status: "active" as const,
+    address: "Kaliti, Addis Ababa, Ethiopia - Admin Building, 1st Floor",
+    contactPerson: "Ato Fikru Desta",
+    phone: "+251-912-456-789",
+    totalCollections: 38,
+    monthlyAverage: 6,
+    collectionType: "regular" as const,
+    needsShredder: false,
+    janitor: {
+      name: "Marta Tadesse",
+      shift: "Morning" as const,
+      phone: "+251-912-444-444"
     },
-    status: "active",
-    lastCollection: "2025-05-08",
-    totalCollections: 7,
-    janitor: { name: "Ato Tesfaye Girma", phone: "+251-911-567-890", shift: "Morning" },
-    preferredCollectionTypes: ["sw", "mixed"],
-    collectionSchedule: {
-      frequency: "Weekly",
-      preferredDays: ["Thursday"],
-      preferredTime: "10:00 AM - 12:00 PM"
-    },
-    followUpRequired: true,
-    shredderRequired: true
+    lastCollection: "2025-05-18",
+    notes: "Various industrial papers"
   },
   {
     id: 15,
-    name: "Ethiopian Meteorology Institute",
-    type: "Government",
-    contact: "Dr. Worku Legesse",
-    phone: "+251-11-567-8901",
-    email: "info@ethiomet.gov.et",
-    address: "Observatory Area, Addis Ababa",
-    detailedAddress: {
-      street: "Observatory Road",
-      subcity: "Kirkos",
-      woreda: "15",
-      houseNumber: "EMI-001",
-      landmark: "Near Observatory Building"
+    name: "First Instance Court Addis Ketema",
+    type: "Government Office",
+    status: "active" as const,
+    address: "Addis Ketema, Addis Ababa, Ethiopia - Court Building, Records Section",
+    contactPerson: "W/ro Tigist Kebede",
+    phone: "+251-912-567-890",
+    totalCollections: 34,
+    monthlyAverage: 6,
+    collectionType: "instore" as const,
+    needsShredder: true,
+    janitor: {
+      name: "Tesfaye Lemma",
+      shift: "Afternoon" as const,
+      phone: "+251-912-555-555"
     },
-    status: "active",
-    lastCollection: "2025-05-08",
-    totalCollections: 15,
-    janitor: { name: "Ato Assefa Mengistu", phone: "+251-911-678-901", shift: "Evening" },
-    preferredCollectionTypes: ["sw", "carton", "mixed"],
-    collectionSchedule: {
-      frequency: "Bi-weekly",
-      preferredDays: ["Friday"],
-      preferredTime: "2:00 PM - 4:00 PM"
-    },
-    followUpRequired: false,
-    shredderRequired: true
+    lastCollection: "2025-05-17",
+    notes: "Legal documents, shredding required"
   },
   {
     id: 16,
-    name: "Dashin Bank Mesikel Flower Branch",
-    type: "Financial",
-    contact: "Ato Yemane Berhe",
-    phone: "+251-11-678-9012",
-    email: "mesikel@dashinbank.com",
-    address: "Mesikel Flower, Addis Ababa",
-    detailedAddress: {
-      street: "Mesikel Flower Road",
-      subcity: "Kirkos",
-      woreda: "16",
-      houseNumber: "DB-001",
-      landmark: "Near Dashin Bank Flower Branch"
+    name: "Ethiopian Meteorology Institute",
+    type: "Research Institute",
+    status: "active" as const,
+    address: "Gullele, Addis Ababa, Ethiopia - Institute Building, Archive Room",
+    contactPerson: "Dr. Getachew Haile",
+    phone: "+251-912-678-901",
+    totalCollections: 30,
+    monthlyAverage: 5,
+    collectionType: "mixed" as const,
+    needsShredder: false,
+    janitor: {
+      name: "Aster Tsegaye",
+      shift: "Evening" as const,
+      phone: "+251-912-666-666"
     },
-    status: "active",
-    lastCollection: "2025-05-09",
-    totalCollections: 6,
-    janitor: { name: "W/ro Birtukan Alemayehu", phone: "+251-911-789-012", shift: "Morning" },
-    preferredCollectionTypes: ["mixed"],
-    collectionSchedule: {
-      frequency: "Daily",
-      preferredDays: ["Monday"],
-      preferredTime: "8:00 AM - 10:00 AM"
-    },
-    followUpRequired: true,
-    shredderRequired: true
+    lastCollection: "2025-05-16",
+    notes: "Scientific papers and data"
   },
   {
     id: 17,
-    name: "Dashin Bank Africa Andinet Branch",
-    type: "Financial",
-    contact: "W/ro Hirut Tadesse",
-    phone: "+251-11-789-0123",
-    email: "andinet@dashinbank.com",
-    address: "Africa Avenue, Addis Ababa",
-    detailedAddress: {
-      street: "Africa Avenue Road",
-      subcity: "Kirkos",
-      woreda: "17",
-      houseNumber: "DB-002",
-      landmark: "Near Dashin Bank Africa Andinet Branch"
+    name: "Dashin Bank Africa Andinet",
+    type: "Financial Institution",
+    status: "active" as const,
+    address: "Africa Andinet, Addis Ababa, Ethiopia - Bank Branch, Records Room",
+    contactPerson: "Ato Yared Tesfaye",
+    phone: "+251-912-789-012",
+    totalCollections: 26,
+    monthlyAverage: 4,
+    collectionType: "instore" as const,
+    needsShredder: true,
+    janitor: {
+      name: "Senait Desta",
+      shift: "Morning" as const,
+      phone: "+251-912-777-777"
     },
-    status: "active",
-    lastCollection: "2025-05-09",
-    totalCollections: 10,
-    janitor: { name: "Ato Daniel Tekle", phone: "+251-911-890-123", shift: "Afternoon" },
-    preferredCollectionTypes: ["sw", "carton", "mixed"],
-    collectionSchedule: {
-      frequency: "Weekly",
-      preferredDays: ["Tuesday", "Thursday"],
-      preferredTime: "1:00 PM - 3:00 PM"
-    },
-    followUpRequired: false,
-    shredderRequired: true
+    lastCollection: "2025-05-15",
+    notes: "Financial records, shredding required"
   },
   {
     id: 18,
-    name: "AA Investment Commission",
-    type: "Government",
-    contact: "Ato Fisseha Mekuria",
-    phone: "+251-11-890-1234",
-    email: "info@aainvestment.gov.et",
-    address: "Investment Area, Addis Ababa",
-    detailedAddress: {
-      street: "Investment Area Road",
-      subcity: "Kirkos",
-      woreda: "18",
-      houseNumber: "AI-001",
-      landmark: "Near AA Investment Commission Office"
+    name: "AA Tax Payers Merkato No 3",
+    type: "Government Office",
+    status: "inactive" as const,
+    address: "Merkato Area, Addis Ababa, Ethiopia - Tax Office, Filing Section",
+    contactPerson: "W/ro Tsion Haile",
+    phone: "+251-912-890-123",
+    totalCollections: 22,
+    monthlyAverage: 4,
+    collectionType: "mixed" as const,
+    needsShredder: true,
+    janitor: {
+      name: "Fitsum Abebe",
+      shift: "Afternoon" as const,
+      phone: "+251-912-888-888"
     },
-    status: "active",
-    lastCollection: "2025-05-09",
-    totalCollections: 5,
-    janitor: { name: "Ato Hailu Wolde", phone: "+251-911-901-234", shift: "Morning" },
-    preferredCollectionTypes: ["mixed"],
-    collectionSchedule: {
-      frequency: "Bi-weekly",
-      preferredDays: ["Wednesday"],
-      preferredTime: "9:00 AM - 11:00 AM"
-    },
-    followUpRequired: true,
-    shredderRequired: false
+    lastCollection: "2025-05-14",
+    notes: "Tax documents, requires secure disposal"
   },
   {
     id: 19,
-    name: "Industry Park",
-    type: "Government",
-    contact: "Eng. Meseret Haile",
-    phone: "+251-11-901-2345",
-    email: "info@industrypark.gov.et",
-    address: "Industrial Area, Addis Ababa",
-    detailedAddress: {
-      street: "Industrial Area Road",
-      subcity: "Kirkos",
-      woreda: "19",
-      houseNumber: "IP-001",
-      landmark: "Near Industry Park Office"
+    name: "Bishoftu Automotive Factory",
+    type: "Manufacturing Plant",
+    status: "active" as const,
+    address: "Bishoftu, Oromia, Ethiopia - Factory Premises, Admin Office",
+    contactPerson: "Ato Befekadu Sileshi",
+    phone: "+251-912-901-234",
+    totalCollections: 18,
+    monthlyAverage: 3,
+    collectionType: "regular" as const,
+    needsShredder: false,
+    janitor: {
+      name: "Rahel Teshome",
+      shift: "Evening" as const,
+      phone: "+251-912-999-999"
     },
-    status: "active",
-    lastCollection: "2025-05-12",
-    totalCollections: 8,
-    janitor: { name: "Ato Berhanu Tesfaye", phone: "+251-911-012-345", shift: "Evening" },
-    preferredCollectionTypes: ["sw", "mixed"],
-    collectionSchedule: {
-      frequency: "Monthly",
-      preferredDays: ["Saturday"],
-      preferredTime: "10:00 AM - 12:00 PM"
-    },
-    followUpRequired: false,
-    shredderRequired: true
+    lastCollection: "2025-05-13",
+    notes: "Manufacturing papers and documents"
   },
   {
     id: 20,
-    name: "First Instance Court Addis Ketema",
-    type: "Legal",
-    contact: "Judge Genet Worku",
-    phone: "+251-11-012-3456",
-    email: "addisketema@federalcourt.gov.et",
-    address: "Addis Ketema, Addis Ababa",
-    detailedAddress: {
-      street: "Addis Ketema Court Road",
-      subcity: "Kirkos",
-      woreda: "20",
-      houseNumber: "FC-002",
-      landmark: "Near First Instance Court Addis Ketema"
+    name: "Adama General Hospital",
+    type: "Healthcare Facility",
+    status: "active" as const,
+    address: "Adama, Oromia, Ethiopia - Hospital Premises, Records Room",
+    contactPerson: "Dr. Eyerusalem Tamiru",
+    phone: "+251-913-012-345",
+    totalCollections: 14,
+    monthlyAverage: 2,
+    collectionType: "instore" as const,
+    needsShredder: true,
+    janitor: {
+      name: "Dawit Lemma",
+      shift: "Morning" as const,
+      phone: "+251-913-000-000"
     },
-    status: "active",
     lastCollection: "2025-05-12",
-    totalCollections: 4,
-    janitor: { name: "W/ro Marta Bekele", phone: "+251-911-123-456", shift: "Morning" },
-    preferredCollectionTypes: ["sw", "sc"],
-    collectionSchedule: {
-      frequency: "Bi-weekly",
-      preferredDays: ["Friday"],
-      preferredTime: "1:00 PM - 3:00 PM"
-    },
-    followUpRequired: true,
-    shredderRequired: false
+    notes: "Medical records, shredding required"
   }
-  // Continue with more suppliers... (truncated for brevity but would include all ~200)
-];
+] as const;
