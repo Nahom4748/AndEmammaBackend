@@ -2,6 +2,8 @@
 export interface Marketer {
   id: number;
   name: string;
+  fullName: string;
+  account: string;
   email: string;
   phone: string;
   assignedSuppliers: number[];
@@ -9,35 +11,76 @@ export interface Marketer {
   monthlyEarnings: number;
   status: "active" | "inactive";
   joinDate: string;
+  products: {
+    mommasHandles: number;
+    giftBaskets: number;
+    wallDecor: number;
+    totalProducts: number;
+  };
+  training: {
+    productTraining: boolean;
+    salesTraining: boolean;
+    customerServiceTraining: boolean;
+    completedDate?: string;
+  };
+  ambassador: {
+    isAmbassador: boolean;
+    level?: "Bronze" | "Silver" | "Gold" | "Platinum";
+    achievementDate?: string;
+    specialties: string[];
+  };
+  weeklySchedule: {
+    monday: string[];
+    tuesday: string[];
+    wednesday: string[];
+    thursday: string[];
+    friday: string[];
+    saturday: string[];
+    sunday: string[];
+  };
 }
 
-export interface Collection {
+export interface CollectionReport {
   id: number;
+  supplierId: number;
+  supplierName: string;
   date: string;
-  day: string;
-  supplier: string;
-  carType: string;
-  bagCode?: string;
-  type: string;
-  collectionType: "regular" | "instore";
-  paperType: "sw" | "mixed" | "carton" | "sc" | "np";
-  quantity: number;
+  type: "instore" | "regular";
+  contactPerson: string;
+  description: string;
+  needsShredder: boolean;
+  collectionTypes: string[];
+  totalWeight: number;
   marketerId: number;
-  amount: number;
+  status: "scheduled" | "completed" | "pending";
+  followUpRequired: boolean;
+  notes?: string;
 }
 
-export interface PaymentRate {
-  sw: number;
-  mixed: number;
-  carton: number;
-  sc: number;
-  np: number;
+export interface DailyReport {
+  date: string;
+  totalCollections: number;
+  totalWeight: number;
+  completedReports: CollectionReport[];
+  pendingReports: CollectionReport[];
+  issues: string[];
 }
 
-export const PAYMENT_RATES: PaymentRate = {
-  sw: 5,
-  mixed: 5,
-  carton: 7,
-  sc: 5,
-  np: 30
-};
+export interface WeeklyReport {
+  weekStart: string;
+  weekEnd: string;
+  totalCollections: number;
+  totalWeight: number;
+  supplierPerformance: {
+    supplierId: number;
+    supplierName: string;
+    collections: number;
+    weight: number;
+  }[];
+  marketerPerformance: {
+    marketerId: number;
+    marketerName: string;
+    collections: number;
+    efficiency: number;
+  }[];
+}

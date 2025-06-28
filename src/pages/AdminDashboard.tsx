@@ -4,11 +4,12 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, Users, Building } from "lucide-react";
+import { Search, Plus, Users, Building, FileText } from "lucide-react";
 import { useState } from "react";
 import { AdminStats } from "@/components/AdminStats";
-import { MarketerCard } from "@/components/MarketerCard";
+import { MarketerDetailsCard } from "@/components/MarketerDetailsCard";
 import { PaymentCalculator } from "@/components/PaymentCalculator";
+import { CollectionReports } from "@/components/CollectionReports";
 import { marketersData } from "@/data/marketersData";
 import { suppliersData } from "@/data/suppliersData";
 import { Marketer } from "@/types";
@@ -19,12 +20,10 @@ const AdminDashboard = () => {
 
   const filteredMarketers = marketersData.filter(marketer =>
     marketer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    marketer.email.toLowerCase().includes(searchTerm.toLowerCase())
+    marketer.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    marketer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    marketer.account.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const handleViewDetails = (marketer: Marketer) => {
-    console.log("View details for:", marketer.name);
-  };
 
   const handleEditMarketer = (marketer: Marketer) => {
     console.log("Edit marketer:", marketer.name);
@@ -62,7 +61,7 @@ const AdminDashboard = () => {
           <div>
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
             <p className="text-muted-foreground">
-              Manage marketers, suppliers, and view comprehensive reports
+              Comprehensive marketer management, performance tracking, and reporting system
             </p>
           </div>
         </div>
@@ -77,9 +76,10 @@ const AdminDashboard = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="marketers" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="marketers">Marketers</TabsTrigger>
           <TabsTrigger value="payments">Payment Calculator</TabsTrigger>
+          <TabsTrigger value="reports">Collection Reports</TabsTrigger>
           <TabsTrigger value="overview">Weekly Overview</TabsTrigger>
         </TabsList>
 
@@ -91,7 +91,7 @@ const AdminDashboard = () => {
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search marketers by name or email..."
+                    placeholder="Search marketers by name, account, or email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -109,13 +109,12 @@ const AdminDashboard = () => {
           </div>
 
           {/* Marketers Grid */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 lg:grid-cols-1 xl:grid-cols-2">
             {filteredMarketers.map((marketer) => (
-              <MarketerCard
+              <MarketerDetailsCard
                 key={marketer.id}
                 marketer={marketer}
-                onViewDetails={handleViewDetails}
-                onEditMarketer={handleEditMarketer}
+                onEdit={handleEditMarketer}
               />
             ))}
           </div>
@@ -135,6 +134,10 @@ const AdminDashboard = () => {
             totalAmount={totalPayment}
             onDownloadExcel={handleDownloadExcel}
           />
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-4">
+          <CollectionReports />
         </TabsContent>
 
         <TabsContent value="overview" className="space-y-4">
