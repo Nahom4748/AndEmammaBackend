@@ -12,6 +12,7 @@ import Schedule from "./pages/Schedule";
 import Suppliers from "./pages/Suppliers";
 import Reports from "./pages/Reports";
 import AdminDashboard from "./pages/AdminDashboard";
+import Performance from "./pages/Performance";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
                 <Route path="/schedule" element={<Schedule />} />
                 <Route path="/suppliers" element={<Suppliers />} />
                 <Route path="/reports" element={<Reports />} />
+                <Route path="/performance" element={<Performance />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
