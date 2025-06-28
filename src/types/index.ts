@@ -1,4 +1,3 @@
-
 export interface Marketer {
   id: number;
   name: string;
@@ -84,3 +83,11 @@ export interface WeeklyReport {
     efficiency: number;
   }[];
 }
+
+export const PAYMENT_RATES = {
+  sw: 5,
+  mixed: 5,
+  carton: 7,
+  sc: 5,
+  np: 30
+} as const;
