@@ -2,9 +2,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, Users, Building, FileText } from "lucide-react";
+import { Search, Plus, Users, Building, FileText, Calendar, Clock, MapPin, Truck } from "lucide-react";
 import { useState } from "react";
 import { AdminStats } from "@/components/AdminStats";
 import { MarketerDetailsCard } from "@/components/MarketerDetailsCard";
@@ -52,6 +53,11 @@ const AdminDashboard = () => {
     scheduledToday: 23,
     reportsGenerated: 12
   };
+  const adminTodaySchedule = [
+    { time: "08:00", supplier: "Addis Ababa University", location: "4 Kilo Campus", carType: "sefu", type: "regular", status: "pending" },
+    { time: "10:00", supplier: "FDRE Ministry of Justice", location: "Main Office", carType: "abrar", type: "regular", status: "in-progress" },
+    { time: "14:30", supplier: "Ethiopian Chamber of Commerce", location: "Headquarters", carType: "sefu", type: "instore", status: "pending" },
+  ];
 
   return (
     <div className="p-6 space-y-6">
@@ -76,10 +82,11 @@ const AdminDashboard = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="marketers" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="marketers">Marketers</TabsTrigger>
           <TabsTrigger value="payments">Payment Calculator</TabsTrigger>
           <TabsTrigger value="reports">Collection Reports</TabsTrigger>
+          <TabsTrigger value="schedule">Schedule</TabsTrigger>
           <TabsTrigger value="overview">Weekly Overview</TabsTrigger>
         </TabsList>
 
@@ -138,6 +145,41 @@ const AdminDashboard = () => {
 
         <TabsContent value="reports" className="space-y-4">
           <CollectionReports />
+        </TabsContent>
+
+        <TabsContent value="schedule" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Today's Schedule
+              </CardTitle>
+              <CardDescription>Key collections planned for today</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {adminTodaySchedule.map((item, index) => (
+                  <div key={index} className="flex items-center gap-4 p-3 border rounded-lg">
+                    <div className="text-sm text-muted-foreground w-16">{item.time}</div>
+                    <div className="flex-1">
+                      <div className="font-medium">{item.supplier}</div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                        <MapPin className="h-3 w-3" />
+                        {item.location}
+                        <Truck className="h-3 w-3 ml-2" />
+                        {item.carType}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Badge variant="outline">{item.type}</Badge>
+                      <Badge variant="secondary">{item.status}</Badge>
+                    </div>
+                    <Button variant="outline" size="sm">View</Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="overview" className="space-y-4">
