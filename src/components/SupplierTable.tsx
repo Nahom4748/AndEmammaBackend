@@ -18,6 +18,8 @@ import { Supplier } from "@/types/supplier";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import axios from "axios";
+import { useState } from "react";
 
 interface SupplierTableProps {
   suppliers: Supplier[];

@@ -1,192 +1,224 @@
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Warehouse, BarChart3, TrendingUp, TrendingDown, Package, Plus, Users, Receipt } from 'lucide-react';
+import { InventoryItem, Supplier, CollectionTransaction, SaleTransaction } from '@/types/inventory';
+import { ModernInventoryCard } from '@/components/ModernInventoryCard';
+import { InventoryReports } from '@/components/InventoryReports';
+import { SupplierForm } from '@/components/SupplierForm';
+import { EnhancedItemForm } from '@/components/EnhancedItemForm';
+import { ModernShoppingCart } from '@/components/ModernShoppingCart';
+import { ModernReceiptSystem } from '@/components/ModernReceiptSystem';
+import { 
+  getSuppliers, 
+  saveSupplier,
+  getCollectionTransactions,
+  getSaleTransactions,
+  saveSaleTransaction,
+  updateInventoryItem,
+  saveReceipt
+} from '@/lib/inventoryStorage';
+import { sampleSuppliers } from '@/data/inventoryData';
+import { Package, Users, TrendingUp, BarChart3, Receipt, Warehouse, AlertTriangle, TrendingDown, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
-import axios from 'axios';
-import { InventoryItemCard } from '@/components/InventoryItemCard';
-import { CollectionForm } from '@/components/CollectionForm';
-import { SaleForm } from '@/components/SaleForm';
-import { ReceiptViewer } from '@/components/ReceiptViewer';
-import { AddItemDialog } from '@/components/AddItemDialog';
-import { AddSupplierDialog } from '@/components/AddSupplierDialog';
-import { SupplierCard } from '@/components/SupplierCard';
-import { RecentTransactions } from '@/components/RecentTransactions';
 
-interface InventoryItem {
-  id: number;
-  name: string;
-  description: string;
-  category: string;
-  type: string;
-  currentStock: number;
-  unitPrice: number;
-  salePrice: number;
-  minStockLevel: number;
-  totalCollected: number;
-  totalSold: number;
-  supplierId?: number;
-  supplierName?: string;
-  lastUpdated: string;
-}
-
-interface Supplier {
-  id: number;
-  name: string;
-  phone: string;
-  address?: string;
-  email?: string;
-  status: string;
-  totalCollections: number;
-  lastCollection?: string;
-}
-
-interface CollectionTransaction {
-  id: number;
-  receiptNumber: string;
-  supplierId: number;
-  supplierName: string;
-  itemId: number;
-  itemName: string;
-  quantity: number;
-  unitPrice: number;
-  totalAmount: number;
-  notes?: string;
-  image?: string;
-  date: string;
-}
-
-interface SaleTransaction {
-  id: number;
-  receiptNumber: string;
-  itemId: number;
-  itemName: string;
-  quantity: number;
-  unitPrice: number;
-  totalAmount: number;
-  customerName?: string;
-  paymentMethod: string;
-  date: string;
-}
-
-const StatCard = ({ 
-  icon, 
-  title, 
-  value, 
-  description 
-}: { 
-  icon: React.ReactNode; 
-  title: string; 
-  value: string; 
-  description: string 
-}) => (
-  <Card>
-    <CardContent className="p-4">
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-full bg-primary/10 text-primary">
-          {icon}
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="text-2xl font-bold">{value}</p>
-          <p className="text-xs text-muted-foreground">{description}</p>
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
-
-const parseApiResponse = <T,>(response: any, defaultValue: T[] = []): T[] => {
-  try {
-    if (response?.data?.data && Array.isArray(response.data.data)) {
-      return response.data.data;
-    }
-    return defaultValue;
-  } catch (error) {
-    console.error('Error parsing API response:', error);
-    return defaultValue;
-  }
-};
+// API base URL
+const API_BASE_URL = 'http://localhost:5000';
 
 export default function ItemManagement() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [collections, setCollections] = useState<CollectionTransaction[]>([]);
   const [sales, setSales] = useState<SaleTransaction[]>([]);
+  const [receipts, setReceipts] = useState<any[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    loadData();
+  }, [refreshKey]);
+
+  const loadData = async () => {
     try {
       setLoading(true);
-      setError(null);
       
-      const [itemsRes, suppliersRes, collectionsRes, salesRes] = await Promise.all([
-        axios.get('/api/items').catch(() => ({ data: { data: [] }})),
-        axios.get('/api/suppliers').catch(() => ({ data: { data: [] }})),
-        axios.get('/api/collections').catch(() => ({ data: { data: [] }})),
-        axios.get('/api/sales').catch(() => ({ data: { data: [] }}))
-      ]);
+      // Fetch items from backend API
+      const itemsResponse = await fetch(`${API_BASE_URL}/items`);
+      const itemsData = await itemsResponse.json();
+      
+      if (itemsData.status === 'success') {
+        // Transform backend data to match frontend InventoryItem type
+        const transformedItems: InventoryItem[] = itemsData.data.map((item: any) => ({
+          id: item.id.toString(),
+          name: item.name,
+          description: item.description || '',
+          category: item.category,
+          currentStock: item.current_stock,
+          unitPrice: parseFloat(item.unit_price),
+          salePrice: parseFloat(item.sale_price),
+          minStockLevel: item.min_stock_level,
+          notes: item.notes || '',
+          collectionDate: item.collection_date,
+          image: item.image ? `${API_BASE_URL}${item.image}` : '',
+          size: item.size || '',
+          dimension: item.dimension || '',
+          supplier: item.supplier_name || '',
+          contactPerson: item.contact_person || '',
+          supplierEmail: item.supplier_email || '',
+          supplierPhone: item.supplier_phone || '',
+          type: 'supplier_item', // Default type
+          vatRate: 15, // Default VAT rate
+          sku: '', // Default empty SKU
+          totalCollected: 0, // Default value
+          totalSold: 0, // Default value
+          lastUpdated: new Date().toISOString(), // Current date
+          supplierId: item.supplier_id ? item.supplier_id.toString() : undefined,
+        }));
+        
+        setItems(transformedItems);
+      }
+      
+      // Fetch receipts from backend API
+      const receiptsResponse = await fetch(`${API_BASE_URL}/api/receipts`);
+      const receiptsData = await receiptsResponse.json();
+      
+      if (receiptsData.status === 'success') {
+        setReceipts(receiptsData.data || []);
+      }
+      
+      // Load other data from local storage
+      let loadedSuppliers = getSuppliers();
+      if (loadedSuppliers.length === 0) {
+        sampleSuppliers.forEach(supplier => saveSupplier(supplier));
+        loadedSuppliers = getSuppliers();
+      }
 
-      setItems(parseApiResponse<InventoryItem>(itemsRes));
-      setSuppliers(parseApiResponse<Supplier>(suppliersRes));
-      setCollections(parseApiResponse<CollectionTransaction>(collectionsRes));
-      setSales(parseApiResponse<SaleTransaction>(salesRes));
-
-    } catch (err) {
-      console.error('Error fetching data:', err);
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      toast.error('Failed to load data');
+      setSuppliers(loadedSuppliers);
+      setCollections(getCollectionTransactions());
+      setSales(getSaleTransactions());
+    } catch (error) {
+      console.error('Failed to load data:', error);
+      toast.error('Failed to load data from server');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  // Function to transform backend receipt data to frontend format
+  const transformBackendReceipt = (backendReceipt: any) => {
+    return {
+      id: backendReceipt.sale_id.toString(),
+      receiptNumber: `SAL-${backendReceipt.sale_id}`,
+      type: 'sale' as const,
+      items: backendReceipt.items.map((item: any) => ({
+        name: item.product_name,
+        quantity: item.quantity,
+        unitPrice: parseFloat(item.unit_price),
+        totalAmount: item.quantity * parseFloat(item.unit_price),
+        vatAmount: (item.quantity * parseFloat(item.unit_price)) * 0.15,
+      })),
+      subtotal: parseFloat(backendReceipt.subtotal),
+      totalVAT: parseFloat(backendReceipt.vat),
+      totalAmount: parseFloat(backendReceipt.total),
+      date: backendReceipt.sale_date,
+      customerName: backendReceipt.customer_name || 'Walk-in Customer',
+      paymentMethod: backendReceipt.payment_method as 'cash' | 'mobile' | 'bank',
+      companyInfo: {
+        name: "AndE Mamma Manufacturing PLC",
+        address: "Addis Ababa, Ethiopia",
+        phone: "+251-911-123456",
+        tinNumber: "0123456789",
+        vatNumber: "ETH-VAT-001234567",
+      },
+    };
+  };
 
-  // Safe calculations with fallbacks
+  const handleCheckout = async (cartItems: any[], paymentMethod: string, customerName?: string) => {
+    try {
+      // Create a single receipt number for all items from the same customer
+      const receiptNumber = `SAL-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+      const saleDate = new Date().toISOString();
+
+      // Calculate totals for the consolidated receipt
+      const subtotal = cartItems.reduce((sum, item) => sum + (item.cartQuantity * item.salePrice), 0);
+      const vatAmount = subtotal * 0.15;
+      const total = subtotal + vatAmount;
+
+      for (const cartItem of cartItems) {
+        // Create sale transaction with the same receipt number
+        const saleTransaction = {
+          itemId: cartItem.id,
+          itemName: cartItem.name,
+          quantity: cartItem.cartQuantity,
+          unitPrice: cartItem.salePrice,
+          totalAmount: cartItem.cartQuantity * cartItem.salePrice,
+          customerName,
+          date: saleDate,
+          receiptNumber: receiptNumber,
+          paymentMethod: paymentMethod as 'cash' | 'mobile' | 'bank',
+        };
+
+        saveSaleTransaction(saleTransaction);
+
+        // Update inventory - you might want to send this to your backend too
+        const updates = {
+          currentStock: cartItem.currentStock - cartItem.cartQuantity,
+          totalSold: cartItem.totalSold + cartItem.cartQuantity,
+          lastUpdated: new Date().toISOString(),
+        };
+        updateInventoryItem(cartItem.id, updates);
+      }
+
+      // Generate one consolidated receipt for all items
+      const consolidatedReceipt = {
+        id: crypto.randomUUID(),
+        receiptNumber: receiptNumber,
+        type: 'sale' as const,
+        items: cartItems.map(item => ({
+          name: item.name,
+          quantity: item.cartQuantity,
+          unitPrice: item.salePrice,
+          totalAmount: item.cartQuantity * item.salePrice,
+          vatAmount: (item.cartQuantity * item.salePrice) * 0.15,
+        })),
+        subtotal,
+        totalVAT: vatAmount,
+        totalAmount: total,
+        date: saleDate,
+        customerName,
+        paymentMethod: paymentMethod as 'cash' | 'mobile' | 'bank',
+        companyInfo: {
+          name: "AndE Mamma Manufacturing PLC",
+          address: "Addis Ababa, Ethiopia",
+          phone: "+251-911-123456",
+          tinNumber: "0123456789",
+          vatNumber: "ETH-VAT-001234567",
+        },
+      };
+
+      saveReceipt(consolidatedReceipt);
+      setRefreshKey(prev => prev + 1);
+    } catch (error) {
+      throw new Error('Failed to process sale');
+    }
+  };
+
   const lowStockItems = items.filter(item => item.currentStock <= item.minStockLevel);
   const totalValue = items.reduce((sum, item) => sum + (item.currentStock * item.unitPrice), 0);
   const totalItems = items.reduce((sum, item) => sum + item.currentStock, 0);
-  
-  const currentMonth = new Date().getMonth();
-  const monthlyCollections = collections
-    .filter(c => new Date(c.date).getMonth() === currentMonth)
-    .reduce((sum, c) => sum + c.totalAmount, 0);
-  
-  const monthlySales = sales
-    .filter(s => new Date(s.date).getMonth() === currentMonth)
-    .reduce((sum, s) => sum + s.totalAmount, 0);
+  const monthlyCollections = collections.filter(c => 
+    new Date(c.date).getMonth() === new Date().getMonth()
+  ).reduce((sum, c) => sum + c.totalAmount, 0);
+  const monthlySales = sales.filter(s => 
+    new Date(s.date).getMonth() === new Date().getMonth()
+  ).reduce((sum, s) => sum + s.totalAmount, 0);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
-          <p className="text-muted-foreground">Loading inventory data...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="max-w-md p-6 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-            <AlertTriangle className="h-6 w-6 text-red-600" />
-          </div>
-          <h3 className="mt-3 text-lg font-medium text-gray-900">Error loading data</h3>
-          <p className="mt-2 text-sm text-gray-500">{error}</p>
-          <div className="mt-6">
-            <Button onClick={fetchData}>
-              Try again
-            </Button>
-          </div>
+      <div className="container mx-auto py-6 flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading inventory data...</p>
         </div>
       </div>
     );
@@ -196,47 +228,67 @@ export default function ItemManagement() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Inventory Management</h1>
-          <p className="text-muted-foreground">Manage inventory, collections, and sales</p>
+          <h1 className="text-3xl font-bold tracking-tight text-primary">Professional Item Management</h1>
+          <p className="text-muted-foreground">Comprehensive inventory, supplier, and sales management system</p>
         </div>
-        <Button onClick={fetchData} variant="outline">
-          Refresh Data
-        </Button>
       </div>
 
       {/* Dashboard Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard 
-          icon={<Warehouse className="h-6 w-6" />}
-          title="Total Stock"
-          value={`${totalItems.toFixed(1)} kg`}
-          description="Current inventory quantity"
-        />
-        <StatCard 
-          icon={<BarChart3 className="h-6 w-6" />}
-          title="Inventory Value"
-          value={`${totalValue.toFixed(0)} ETB`}
-          description="Total value of inventory"
-        />
-        <StatCard 
-          icon={<TrendingUp className="h-6 w-6" />}
-          title="Monthly Collections"
-          value={`${monthlyCollections.toFixed(0)} ETB`}
-          description="This month's collections"
-        />
-        <StatCard 
-          icon={<TrendingDown className="h-6 w-6" />}
-          title="Monthly Sales"
-          value={`${monthlySales.toFixed(0)} ETB`}
-          description="This month's sales"
-        />
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <Warehouse className="h-10 w-10 text-primary" />
+              <div>
+                <p className="text-sm text-muted-foreground">Total Stock</p>
+                <p className="text-2xl font-bold text-primary">{totalItems} qty</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <BarChart3 className="h-10 w-10 text-success" />
+              <div>
+                <p className="text-sm text-muted-foreground">Inventory Value</p>
+                <p className="text-2xl font-bold text-success">{totalValue.toFixed(0)} ETB</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <TrendingUp className="h-10 w-10 text-primary" />
+              <div>
+                <p className="text-sm text-muted-foreground">Monthly Collections</p>
+                <p className="text-2xl font-bold text-primary">{monthlyCollections.toFixed(0)} ETB</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <TrendingDown className="h-10 w-10 text-success" />
+              <div>
+                <p className="text-sm text-muted-foreground">Monthly Sales</p>
+                <p className="text-2xl font-bold text-success">{monthlySales.toFixed(0)} ETB</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Low Stock Alert */}
       {lowStockItems.length > 0 && (
-        <Card className="border-destructive">
+        <Card className="border-warning bg-warning/5">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-destructive">
+            <CardTitle className="flex items-center gap-2 text-warning">
               <AlertTriangle className="h-5 w-5" />
               Low Stock Alert ({lowStockItems.length} items)
             </CardTitle>
@@ -244,8 +296,8 @@ export default function ItemManagement() {
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {lowStockItems.map(item => (
-                <Badge key={item.id} variant="outline" className="text-destructive border-destructive">
-                  {item.name}: {item.currentStock} kg (min: {item.minStockLevel} kg)
+                <Badge key={item.id} variant="outline" className="text-warning border-warning">
+                  {item.name}: {item.currentStock} qty
                 </Badge>
               ))}
             </div>
@@ -253,130 +305,77 @@ export default function ItemManagement() {
         </Card>
       )}
 
-      <Tabs defaultValue="inventory" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="inventory">Inventory</TabsTrigger>
-          <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
-          <TabsTrigger value="collections">Collections</TabsTrigger>
-          <TabsTrigger value="sales">Sales</TabsTrigger>
-          <TabsTrigger value="receipts">Receipts</TabsTrigger>
+      <Tabs defaultValue="suppliers" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="suppliers" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Suppliers
+          </TabsTrigger>
+          <TabsTrigger value="items" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Items
+          </TabsTrigger>
+          <TabsTrigger value="inventory" className="flex items-center gap-2">
+            <Warehouse className="h-4 w-4" />
+            Inventory
+          </TabsTrigger>
+          <TabsTrigger value="sales" className="flex items-center gap-2">
+            <ShoppingCart className="h-4 w-4" />
+            Sales
+          </TabsTrigger>
+          <TabsTrigger value="receipts" className="flex items-center gap-2">
+            <Receipt className="h-4 w-4" />
+            Receipts
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Reports
+          </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="suppliers" className="space-y-6">
+          <SupplierForm suppliers={suppliers} onSupplierAdded={() => setRefreshKey(prev => prev + 1)} />
+        </TabsContent>
+
+        <TabsContent value="items" className="space-y-6">
+          <EnhancedItemForm suppliers={suppliers} onItemAdded={() => setRefreshKey(prev => prev + 1)} />
+        </TabsContent>
 
         <TabsContent value="inventory" className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Inventory Items ({items.length})</h2>
-            <AddItemDialog 
-              suppliers={suppliers}
-              onSuccess={fetchData}
-            />
+            <h2 className="text-2xl font-bold text-primary">Inventory Items</h2>
           </div>
-
-          {items.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {items.map(item => (
-                <InventoryItemCard
-                  key={item.id}
-                  item={item}
-                  onUpdate={fetchData}
-                />
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Package className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-medium">No inventory items</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Get started by adding your first inventory item.
-                </p>
-                <div className="mt-6">
-                  <AddItemDialog 
-                    suppliers={suppliers}
-                    onSuccess={fetchData}
-                    trigger={
-                      <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Item
-                      </Button>
-                    }
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="suppliers" className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Suppliers ({suppliers.length})</h2>
-            <AddSupplierDialog onSuccess={fetchData} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {items.map(item => (
+              <ModernInventoryCard
+                key={item.id}
+                item={item}
+                onUpdate={() => setRefreshKey(prev => prev + 1)}
+              />
+            ))}
           </div>
-
-          {suppliers.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {suppliers.map(supplier => (
-                <SupplierCard 
-                  key={supplier.id}
-                  supplier={supplier}
-                  onUpdate={fetchData}
-                />
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Users className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-medium">No suppliers</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Get started by adding your first supplier.
-                </p>
-                <div className="mt-6">
-                  <AddSupplierDialog 
-                    onSuccess={fetchData}
-                    trigger={
-                      <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Supplier
-                      </Button>
-                    }
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="collections" className="space-y-6">
-          <CollectionForm
-            items={items}
-            suppliers={suppliers}
-            onSuccess={fetchData}
-          />
-
-          <RecentTransactions 
-            transactions={collections}
-            type="collections"
-            title="Recent Collections"
-            emptyMessage="No collection records found"
-          />
         </TabsContent>
 
         <TabsContent value="sales" className="space-y-6">
-          <SaleForm
-            items={items.filter(item => item.currentStock > 0)}
-            onSuccess={fetchData}
-          />
-
-          <RecentTransactions 
-            transactions={sales}
-            type="sales"
-            title="Recent Sales"
-            emptyMessage="No sales records found"
-          />
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-primary">Sales System</h2>
+          </div>
+          <ModernShoppingCart items={items} onCheckout={handleCheckout} />
         </TabsContent>
 
         <TabsContent value="receipts" className="space-y-6">
-          <ReceiptViewer />
+          <ModernReceiptSystem 
+            receipts={receipts.map(transformBackendReceipt)} 
+            onGenerateReceipt={transformBackendReceipt} 
+          />
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-6">
+          <InventoryReports 
+            items={items}
+            collections={collections}
+            sales={sales}
+          />
         </TabsContent>
       </Tabs>
     </div>

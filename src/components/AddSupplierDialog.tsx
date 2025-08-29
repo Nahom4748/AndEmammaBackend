@@ -25,17 +25,24 @@ export const AddSupplierDialog = ({ onSuccess, trigger }: AddSupplierDialogProps
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     name: '',
+    contactPerson: '',
     phone: '',
-    address: '',
     email: '',
-    status: 'active',
+    licenseNumber: '',
+    address: '',
+    sector: '',
+    status: 'active'
   });
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = 'Company name is required';
+    }
+    
+    if (!formData.contactPerson.trim()) {
+      newErrors.contactPerson = 'Contact person is required';
     }
     
     if (!formData.phone.trim()) {
@@ -46,6 +53,14 @@ export const AddSupplierDialog = ({ onSuccess, trigger }: AddSupplierDialogProps
     
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Invalid email address';
+    }
+    
+    if (!formData.licenseNumber.trim()) {
+      newErrors.licenseNumber = 'License number is required';
+    }
+    
+    if (!formData.sector.trim()) {
+      newErrors.sector = 'Sector is required';
     }
     
     setErrors(newErrors);
@@ -61,18 +76,23 @@ export const AddSupplierDialog = ({ onSuccess, trigger }: AddSupplierDialogProps
 
     try {
       setIsLoading(true);
-      await axios.post('/api/suppliers', formData);
+      
+      await axios.post("http://localhost:5000/item-providers", formData);
       toast.success('Supplier added successfully', {
         style: { background: '#4CAF50', color: 'white', border: 'none' }
       });
       setIsOpen(false);
       onSuccess();
+      // Reset form
       setFormData({
         name: '',
+        contactPerson: '',
         phone: '',
-        address: '',
         email: '',
-        status: 'active',
+        licenseNumber: '',
+        address: '',
+        sector: '',
+        status: 'active'
       });
       setErrors({});
     } catch (error) {
@@ -91,6 +111,14 @@ export const AddSupplierDialog = ({ onSuccess, trigger }: AddSupplierDialogProps
     }
   };
 
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -101,61 +129,102 @@ export const AddSupplierDialog = ({ onSuccess, trigger }: AddSupplierDialogProps
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-green-700">Add New Supplier</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="name" className="text-gray-700">Full Name *</Label>
+              <Label htmlFor="name" className="text-gray-700">Company Name *</Label>
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => handleInputChange('name', e.target.value)}
                 disabled={isLoading}
                 className={errors.name ? 'border-red-500' : ''}
               />
               {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>
             <div>
-              <Label htmlFor="phone" className="text-gray-700">Phone *</Label>
+              <Label htmlFor="contactPerson" className="text-gray-700">Contact Person *</Label>
+              <Input
+                id="contactPerson"
+                value={formData.contactPerson}
+                onChange={(e) => handleInputChange('contactPerson', e.target.value)}
+                disabled={isLoading}
+                className={errors.contactPerson ? 'border-red-500' : ''}
+              />
+              {errors.contactPerson && <p className="text-red-500 text-xs mt-1">{errors.contactPerson}</p>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="phone" className="text-gray-700">Phone Number *</Label>
               <Input
                 id="phone"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
                 disabled={isLoading}
                 className={errors.phone ? 'border-red-500' : ''}
               />
               {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
             </div>
+            <div>
+              <Label htmlFor="email" className="text-gray-700">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                disabled={isLoading}
+                className={errors.email ? 'border-red-500' : ''}
+              />
+              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+            </div>
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="licenseNumber" className="text-gray-700">License Number *</Label>
+              <Input
+                id="licenseNumber"
+                value={formData.licenseNumber}
+                onChange={(e) => handleInputChange('licenseNumber', e.target.value)}
+                disabled={isLoading}
+                className={errors.licenseNumber ? 'border-red-500' : ''}
+              />
+              {errors.licenseNumber && <p className="text-red-500 text-xs mt-1">{errors.licenseNumber}</p>}
+            </div>
+            <div>
+              <Label htmlFor="sector" className="text-gray-700">Business Sector *</Label>
+              <Input
+                id="sector"
+                value={formData.sector}
+                onChange={(e) => handleInputChange('sector', e.target.value)}
+                disabled={isLoading}
+                className={errors.sector ? 'border-red-500' : ''}
+              />
+              {errors.sector && <p className="text-red-500 text-xs mt-1">{errors.sector}</p>}
+            </div>
+          </div>
+
           <div>
-            <Label htmlFor="address" className="text-gray-700">Address</Label>
+            <Label htmlFor="address" className="text-gray-700">Full Address</Label>
             <Input
               id="address"
               value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              onChange={(e) => handleInputChange('address', e.target.value)}
               disabled={isLoading}
             />
           </div>
-          <div>
-            <Label htmlFor="email" className="text-gray-700">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              disabled={isLoading}
-              className={errors.email ? 'border-red-500' : ''}
-            />
-            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-          </div>
+
           <div>
             <Label htmlFor="status" className="text-gray-700">Status</Label>
             <Select
               value={formData.status}
-              onValueChange={(value) => setFormData({ ...formData, status: value as 'active' | 'inactive' })}
+              onValueChange={(value) => handleInputChange('status', value)}
               disabled={isLoading}
             >
               <SelectTrigger className="w-full">
@@ -167,13 +236,14 @@ export const AddSupplierDialog = ({ onSuccess, trigger }: AddSupplierDialogProps
               </SelectContent>
             </Select>
           </div>
+
           <div className="flex gap-2 pt-4">
             <Button 
               type="submit" 
               disabled={isLoading} 
               className="flex-1 bg-green-600 hover:bg-green-700 text-white"
             >
-              {isLoading ? 'Adding...' : 'Add Supplier'}
+              {isLoading ? 'Adding Supplier...' : 'Add Supplier'}
             </Button>
             <Button 
               type="button" 
