@@ -1,22 +1,19 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarDays, Truck, Users, FileText } from "lucide-react";
+import { CalendarDays, Truck, Users, FileText, BarChart3, Package, Target } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { LucideProps } from 'lucide-react';
 
+// API base URL
+const API_BASE_URL = 'http://localhost:5000';
+
 interface StatItem {
   title: string;
   value: string;
   description: string;
-}
-
-interface CollectionTypeData {
-  name: string;
-  value: string;
-  color: string;
 }
 
 interface ProcessedCollectionTypeData {
@@ -77,19 +74,24 @@ const Dashboard = () => {
     activeDays: ''
   });
 
-  // Icons and colors for stats cards
-  const statConfigs: StatConfig[] = [
-    { icon: Truck, color: "text-blue-600", bgColor: "bg-blue-50" },
-    { icon: Users, color: "text-green-600", bgColor: "bg-green-50" },
-    { icon: CalendarDays, color: "text-orange-600", bgColor: "bg-orange-50" },
-    { icon: FileText, color: "text-purple-600", bgColor: "bg-purple-50" },
-  ];
+  // Icons and colors for stats cards - updated to match the API response
+  const statConfigs: Record<string, StatConfig> = {
+    "Total Collections (kg)": { icon: Package, color: "text-blue-600", bgColor: "bg-blue-50" },
+    "Active Suppliers": { icon: Users, color: "text-green-600", bgColor: "bg-green-50" },
+    "Scheduled Today": { icon: CalendarDays, color: "text-orange-600", bgColor: "bg-orange-50" },
+    "Monthly Reports": { icon: FileText, color: "text-purple-600", bgColor: "bg-purple-50" },
+    "Weekly Regular Collections (kg)": { icon: BarChart3, color: "text-indigo-600", bgColor: "bg-indigo-50" },
+    "Weekly Instore Collections (kg)": { icon: Target, color: "text-pink-600", bgColor: "bg-pink-50" }
+  };
+
+  // Default config for any unexpected stat titles
+  const defaultConfig: StatConfig = { icon: BarChart3, color: "text-gray-600", bgColor: "bg-gray-50" };
 
   // Fetch dashboard stats
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/getDashboardStats');
+        const response = await axios.get(`${API_BASE_URL}/api/getDashboardStats`);
         if (response.data.status === 'success') {
           setStats(response.data.data);
         }
@@ -108,7 +110,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchCollectionTypeData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/getCollectionTypeData');
+        const response = await axios.get(`${API_BASE_URL}/api/getCollectionTypeData`);
         if (response.data.status === 'success') {
           const processedData = response.data.data
             .map(item => ({
@@ -134,7 +136,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchWeeklyData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/collection/getWeeklyCollectionData');
+        const response = await axios.get(`${API_BASE_URL}/api/collection/getWeeklyCollectionData`);
         if (response.data.status === 'success') {
           setWeeklyData(response.data.data);
         }
@@ -153,7 +155,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchMonthlyTrend = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/getMonthlyTrendData');
+        const response = await axios.get(`${API_BASE_URL}/api/getMonthlyTrendData`);
         if (response.data.status === 'success') {
           setMonthlyTrend(response.data.data);
         }
@@ -172,7 +174,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchTopSuppliers = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/suppliers-stats');
+        const response = await axios.get(`${API_BASE_URL}/api/suppliers-stats`);
         if (response.data.status === 'success') {
           setTopSuppliers(response.data.data);
         }
@@ -191,7 +193,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchActiveDays = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/most-active-days');
+        const response = await axios.get(`${API_BASE_URL}/api/most-active-days`);
         if (response.data.status === 'success') {
           setActiveDays(response.data.data);
         }
@@ -206,6 +208,17 @@ const Dashboard = () => {
     fetchActiveDays();
   }, []);
 
+  // Format large numbers with commas
+  const formatNumber = (num: string) => {
+    const number = parseFloat(num);
+    if (isNaN(number)) return num;
+    
+    return number.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-4">
@@ -217,48 +230,50 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {loading.stats ? (
-          Array(4).fill(0).map((_, index) => (
-            <Card key={index}>
+          Array(6).fill(0).map((_, index) => (
+            <Card key={index} className="animate-pulse">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Loading...</CardTitle>
-                <div className="p-2 rounded-lg bg-gray-50">
-                  <div className="h-4 w-4 bg-gray-200 rounded-full" />
+                <div className="h-4 w-24 bg-gray-200 rounded" />
+                <div className="p-2 rounded-lg bg-gray-200">
+                  <div className="h-4 w-4 rounded-full" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="h-8 w-20 bg-gray-200 rounded animate-pulse" />
-                <p className="h-4 w-24 bg-gray-200 rounded mt-2 animate-pulse" />
+                <div className="h-7 w-20 bg-gray-200 rounded mt-1" />
+                <div className="h-3 w-28 bg-gray-200 rounded mt-2" />
               </CardContent>
             </Card>
           ))
         ) : error.stats ? (
-          <div className="col-span-4 text-red-500">{error.stats}</div>
+          <div className="col-span-6 text-red-500 text-center py-4">{error.stats}</div>
         ) : (
-          stats.map((stat, index) => (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <div className={`p-2 rounded-lg ${statConfigs[index].bgColor}`}>
-                  {(() => {
-                    const Icon = statConfigs[index].icon;
-                    return <Icon className={`h-4 w-4 ${statConfigs[index].color}`} />;
-                  })()}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">{stat.description}</p>
-              </CardContent>
-            </Card>
-          ))
+          stats.map((stat, index) => {
+            const config = statConfigs[stat.title] || defaultConfig;
+            const Icon = config.icon;
+            
+            return (
+              <Card key={index} className="overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                  <div className={`p-2 rounded-lg ${config.bgColor}`}>
+                    <Icon className={`h-4 w-4 ${config.color}`} />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{formatNumber(stat.value)}</div>
+                  <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+                </CardContent>
+              </Card>
+            );
+          })
         )}
       </div>
 
       {/* Charts Section */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="trends">Trends</TabsTrigger>
           <TabsTrigger value="breakdown">Breakdown</TabsTrigger>
@@ -279,13 +294,19 @@ const Dashboard = () => {
                 <div className="h-[300px] flex items-center justify-center text-red-500">
                   {error.weeklyData}
                 </div>
+              ) : weeklyData.length === 0 ? (
+                <div className="h-[300px] flex items-center justify-center">
+                  <div className="text-gray-500">No weekly data available</div>
+                </div>
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={weeklyData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="day" />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip 
+                      formatter={(value: number) => [`${value.toFixed(2)} kg`, 'Weight']}
+                    />
                     <Legend />
                     <Bar dataKey="regular" fill="#0088FE" name="Regular" />
                     <Bar dataKey="instore" fill="#00C49F" name="In-store" />
@@ -355,19 +376,26 @@ const Dashboard = () => {
                 <div className="h-[400px] flex items-center justify-center text-red-500">
                   {error.monthlyTrend}
                 </div>
+              ) : monthlyTrend.length === 0 ? (
+                <div className="h-[400px] flex items-center justify-center">
+                  <div className="text-gray-500">No trend data available</div>
+                </div>
               ) : (
                 <ResponsiveContainer width="100%" height={400}>
                   <LineChart data={monthlyTrend}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip 
+                      formatter={(value: number) => [`${value}`, 'Collections']}
+                    />
                     <Legend />
                     <Line 
                       type="monotone" 
                       dataKey="collections" 
                       stroke="#0088FE" 
                       strokeWidth={2} 
+                      name="Collections"
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -381,6 +409,7 @@ const Dashboard = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Top Suppliers</CardTitle>
+                <CardDescription>By collection volume</CardDescription>
               </CardHeader>
               <CardContent>
                 {loading.suppliers ? (
@@ -397,11 +426,13 @@ const Dashboard = () => {
                 ) : topSuppliers.length === 0 ? (
                   <div className="text-gray-500">No supplier data available</div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {topSuppliers.map((supplier, index) => (
-                      <div key={index} className="flex justify-between">
-                        <span className="text-sm">{supplier.name}</span>
-                        <span className="text-sm font-medium">{supplier.value}</span>
+                      <div key={index} className="flex justify-between items-center">
+                        <span className="text-sm font-medium">{supplier.name}</span>
+                        <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                          {supplier.value}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -412,6 +443,7 @@ const Dashboard = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Most Active Days</CardTitle>
+                <CardDescription>By collection count and weight</CardDescription>
               </CardHeader>
               <CardContent>
                 {loading.activeDays ? (
@@ -428,13 +460,14 @@ const Dashboard = () => {
                 ) : activeDays.length === 0 ? (
                   <div className="text-gray-500">No active days data available</div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {activeDays.map((day, index) => (
-                      <div key={index} className="flex justify-between">
-                        <span className="text-sm">{day.day}</span>
-                        <span className="text-sm font-medium">
-                          {day.total_collections} ({day.total_kg_collected} kg)
-                        </span>
+                      <div key={index} className="flex justify-between items-center">
+                        <span className="text-sm font-medium capitalize">{day.day}</span>
+                        <div className="text-right">
+                          <div className="text-sm font-medium">{day.total_collections} collections</div>
+                          <div className="text-xs text-muted-foreground">{day.total_kg_collected} kg</div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -445,20 +478,25 @@ const Dashboard = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Collection Efficiency</CardTitle>
+                <CardDescription>Performance metrics</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">On Time</span>
-                    <span className="text-sm font-medium text-green-600">94%</span>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">On Time Rate</span>
+                    <span className="text-sm font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">94%</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Delayed</span>
-                    <span className="text-sm font-medium text-yellow-600">4%</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Collection Completion</span>
+                    <span className="text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">88%</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Missed</span>
-                    <span className="text-sm font-medium text-red-600">2%</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Quality Issues</span>
+                    <span className="text-sm font-medium text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full">4%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Missed Collections</span>
+                    <span className="text-sm font-medium text-red-600 bg-red-100 px-2 py-1 rounded-full">2%</span>
                   </div>
                 </div>
               </CardContent>

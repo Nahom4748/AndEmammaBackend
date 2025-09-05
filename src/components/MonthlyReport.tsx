@@ -1,50 +1,239 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { Calendar, Download, TrendingUp, Trophy, Target, Truck } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import * as XLSX from 'xlsx';
 
 export const MonthlyReport = () => {
-  const [selectedMonth, setSelectedMonth] = useState("may-2025");
+  const [selectedYear, setSelectedYear] = useState("2025");
+  const [selectedMonth, setSelectedMonth] = useState("may");
+  const [monthlyData, setMonthlyData] = useState({
+    totalCollections: 0,
+    totalKg: 0,
+    totalRevenue: 0,
+    targetAchievement: 0,
+    topPerformers: []
+  });
+  const [employeePerformance, setEmployeePerformance] = useState([]);
+  const [collectionTrends, setCollectionTrends] = useState([]);
+  const [collectionTypes, setCollectionTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const monthlyData = {
-    totalCollections: 1247,
-    totalKg: 312000,
-    totalRevenue: 156000,
-    targetAchievement: 94.7,
-    topPerformers: [
-      { name: "Addis Ababa University", collections: 45, kg: 11250, revenue: 5625, efficiency: 96 },
-      { name: "FDRE Ministry of Justice", collections: 38, kg: 9500, revenue: 4750, efficiency: 94 },
-      { name: "Ethiopian Chamber", collections: 32, kg: 8000, revenue: 4000, efficiency: 98 },
-      { name: "AACA Farms Commission", collections: 28, kg: 7000, revenue: 3500, efficiency: 92 },
-      { name: "Kotebe University", collections: 25, kg: 6250, revenue: 3125, efficiency: 95 }
-    ]
+  // Target constants
+  const INSTORE_TARGET = 150000; // kg
+  const REGULAR_TARGET = 50000; // kg
+  const TOTAL_TARGET = INSTORE_TARGET + REGULAR_TARGET;
+
+  useEffect(() => {
+    fetchAllData();
+  }, [selectedYear, selectedMonth]);
+
+  const fetchAllData = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchMonthlyData(),
+        fetchEmployeePerformance(),
+        fetchWeeklyCollectionTrends(),
+        fetchCollectionTypeBreakdown()
+      ]);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const employeePerformance = [
-    { name: "Aschlew", target: 150000, achieved: 142000, percentage: 94.7 },
-    { name: "Sefu", target: 150000, achieved: 138500, percentage: 92.3 },
-    { name: "Zelalem", target: 50000, achieved: 48500, percentage: 97.0 },
-    { name: "Manzefro", target: 30000, achieved: 28900, percentage: 96.3 }
-  ];
+  const fetchMonthlyData = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/getMonthlyData?year=${selectedYear}&month=${selectedMonth}`);
+      const data = await response.json();
+      
+      if (data.status === "success") {
+        setMonthlyData({
+          totalCollections: data.data.totalCollections,
+          totalKg: parseFloat(data.data.totalKg),
+          totalRevenue: parseFloat(data.data.totalRevenue),
+          targetAchievement: parseFloat(data.data.targetAchievement),
+          topPerformers: data.data.topPerformers.map(performer => ({
+            ...performer,
+            kg: parseFloat(performer.kg),
+            revenue: parseFloat(performer.revenue),
+            efficiency: parseFloat(performer.efficiency)
+          }))
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching monthly data:", error);
+    }
+  };
 
-  const collectionTrends = [
-    { week: "Week 1", collections: 78, kg: 19500 },
-    { week: "Week 2", collections: 85, kg: 21250 },
-    { week: "Week 3", collections: 92, kg: 23000 },
-    { week: "Week 4", collections: 89, kg: 22250 }
-  ];
+  const fetchEmployeePerformance = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/getEmployeePerformance?year=${selectedYear}&month=${selectedMonth}`);
+      const data = await response.json();
+      
+      if (data.status === "success") {
+        // Combine instore and regular performance
+        const allEmployees = [
+          ...data.data.instorePerformance.map(emp => ({
+            ...emp,
+            target: parseFloat(emp.target) || 0,
+            achieved: parseFloat(emp.achieved) || 0,
+            percentage: parseFloat(emp.percentage) || 0
+          })),
+          ...data.data.regularPerformance.map(emp => ({
+            ...emp,
+            target: parseFloat(emp.target) || 0,
+            achieved: parseFloat(emp.achieved) || 0,
+            percentage: parseFloat(emp.percentage) || 0
+          }))
+        ];
+        
+        setEmployeePerformance(allEmployees);
+      }
+    } catch (error) {
+      console.error("Error fetching employee performance:", error);
+    }
+  };
 
-  const collectionTypes = [
-    { name: "Carton", value: 145, revenue: 1015, color: "#0088FE" },
-    { name: "Mixed", value: 112, revenue: 560, color: "#00C49F" },
-    { name: "SW", value: 89, revenue: 445, color: "#FFBB28" },
-    { name: "SC", value: 67, revenue: 335, color: "#FF8042" },
-    { name: "NP", value: 34, revenue: 1020, color: "#8884D8" }
-  ];
+  const fetchWeeklyCollectionTrends = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/getWeeklyCollectionTrends?year=${selectedYear}&month=${selectedMonth}`);
+      const data = await response.json();
+      
+      if (data.status === "success") {
+        setCollectionTrends(data.data.map(week => ({
+          ...week,
+          collections: parseInt(week.collections),
+          kg: parseFloat(week.kg)
+        })));
+      }
+    } catch (error) {
+      console.error("Error fetching weekly trends:", error);
+    }
+  };
+
+  const fetchCollectionTypeBreakdown = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/getCollectionTypeBreakdown?year=${selectedYear}&month=${selectedMonth}`);
+      const data = await response.json();
+      
+      if (data.status === "success") {
+        setCollectionTypes(data.data.map(item => ({
+          name: item.name,
+          value: parseFloat(item.value),
+          revenue: parseFloat(item.value) * 0.5, // Assuming average revenue per kg
+          color: item.color
+        })));
+      }
+    } catch (error) {
+      console.error("Error fetching collection types:", error);
+    }
+  };
+
+  const exportToExcel = () => {
+    // Prepare data for export
+    const workbook = XLSX.utils.book_new();
+    
+    // Key Metrics Sheet
+    const metricsData = [
+      ["Metric", "Value", "Target", "Achievement %"],
+      ["Total Collections", monthlyData.totalCollections, "-", "-"],
+      ["Total Weight (kg)", monthlyData.totalKg, TOTAL_TARGET, `${((monthlyData.totalKg / TOTAL_TARGET) * 100).toFixed(1)}%`],
+      ["Total Revenue (ETB)", monthlyData.totalRevenue, "-", "-"],
+      ["Target Achievement", `${monthlyData.targetAchievement}%`, "100%", `${monthlyData.targetAchievement}%`]
+    ];
+    const metricsSheet = XLSX.utils.aoa_to_sheet(metricsData);
+    XLSX.utils.book_append_sheet(workbook, metricsSheet, "Key Metrics");
+    
+    // Top Performers Sheet
+    const performersData = [
+      ["Rank", "Supplier", "Collections", "Weight (kg)", "Revenue (ETB)", "Efficiency %"]
+    ];
+    monthlyData.topPerformers.forEach((performer, index) => {
+      performersData.push([
+        index + 1,
+        performer.name,
+        performer.collections,
+        performer.kg,
+        performer.revenue,
+        performer.efficiency
+      ]);
+    });
+    const performersSheet = XLSX.utils.aoa_to_sheet(performersData);
+    XLSX.utils.book_append_sheet(workbook, performersSheet, "Top Performers");
+    
+    // Employee Performance Sheet
+    const employeeData = [
+      ["Employee", "Target (kg)", "Achieved (kg)", "Achievement %"]
+    ];
+    employeePerformance.forEach(emp => {
+      employeeData.push([
+        emp.name,
+        emp.target,
+        emp.achieved,
+        emp.percentage
+      ]);
+    });
+    const employeeSheet = XLSX.utils.aoa_to_sheet(employeeData);
+    XLSX.utils.book_append_sheet(workbook, employeeSheet, "Employee Performance");
+    
+    // Collection Trends Sheet
+    const trendsData = [
+      ["Week", "Collections", "Weight (kg)"]
+    ];
+    collectionTrends.forEach(trend => {
+      trendsData.push([
+        trend.week,
+        trend.collections,
+        trend.kg
+      ]);
+    });
+    const trendsSheet = XLSX.utils.aoa_to_sheet(trendsData);
+    XLSX.utils.book_append_sheet(workbook, trendsSheet, "Weekly Trends");
+    
+    // Collection Types Sheet
+    const typesData = [
+      ["Type", "Weight (kg)", "Revenue (ETB)"]
+    ];
+    collectionTypes.forEach(type => {
+      typesData.push([
+        type.name,
+        type.value,
+        type.revenue
+      ]);
+    });
+    const typesSheet = XLSX.utils.aoa_to_sheet(typesData);
+    XLSX.utils.book_append_sheet(workbook, typesSheet, "Collection Types");
+    
+    // Generate and download the file
+    const fileName = `Monthly_Report_${selectedMonth}_${selectedYear}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+  };
+
+  const getTargetStatus = (achievement) => {
+    if (achievement >= 100) return "bg-green-100 text-green-800";
+    if (achievement >= 90) return "bg-yellow-100 text-yellow-800";
+    return "bg-red-100 text-red-800";
+  };
+
+  const getTargetStatusText = (achievement) => {
+    if (achievement >= 100) return "Target Exceeded";
+    if (achievement >= 90) return "On Track";
+    return "Needs Improvement";
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -55,22 +244,96 @@ export const MonthlyReport = () => {
           <p className="text-gray-600">Comprehensive evaluation and analysis</p>
         </div>
         <div className="flex gap-3">
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-[200px]">
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="w-[120px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="may-2025">May 2025</SelectItem>
-              <SelectItem value="april-2025">April 2025</SelectItem>
-              <SelectItem value="march-2025">March 2025</SelectItem>
+              <SelectItem value="2023">2023</SelectItem>
+              <SelectItem value="2024">2024</SelectItem>
+              <SelectItem value="2025">2025</SelectItem>
             </SelectContent>
           </Select>
-          <Button>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="january">January</SelectItem>
+              <SelectItem value="february">February</SelectItem>
+              <SelectItem value="march">March</SelectItem>
+              <SelectItem value="april">April</SelectItem>
+              <SelectItem value="may">May</SelectItem>
+              <SelectItem value="june">June</SelectItem>
+              <SelectItem value="july">July</SelectItem>
+              <SelectItem value="august">August</SelectItem>
+              <SelectItem value="september">September</SelectItem>
+              <SelectItem value="october">October</SelectItem>
+              <SelectItem value="november">November</SelectItem>
+              <SelectItem value="december">December</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={exportToExcel}>
             <Download className="mr-2 h-4 w-4" />
-            Export Report
+            Export to Excel
           </Button>
         </div>
       </div>
+
+      {/* Target Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-blue-600" />
+            Monthly Target Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="p-4 border rounded-lg">
+              <h3 className="font-semibold text-gray-700">In-Store Target</h3>
+              <p className="text-2xl font-bold">{INSTORE_TARGET.toLocaleString()} kg</p>
+              <div className="mt-2 h-2 bg-gray-200 rounded-full">
+                <div 
+                  className="h-2 bg-blue-600 rounded-full" 
+                  style={{ width: `${Math.min(100, (monthlyData.totalKg / INSTORE_TARGET) * 100)}%` }}
+                ></div>
+              </div>
+              <p className="text-sm mt-1">
+                {((monthlyData.totalKg / INSTORE_TARGET) * 100).toFixed(1)}% Achieved
+              </p>
+            </div>
+            
+            <div className="p-4 border rounded-lg">
+              <h3 className="font-semibold text-gray-700">Regular Target</h3>
+              <p className="text-2xl font-bold">{REGULAR_TARGET.toLocaleString()} kg</p>
+              <div className="mt-2 h-2 bg-gray-200 rounded-full">
+                <div 
+                  className="h-2 bg-green-600 rounded-full" 
+                  style={{ width: `${Math.min(100, (monthlyData.totalKg / REGULAR_TARGET) * 100)}%` }}
+                ></div>
+              </div>
+              <p className="text-sm mt-1">
+                {((monthlyData.totalKg / REGULAR_TARGET) * 100).toFixed(1)}% Achieved
+              </p>
+            </div>
+            
+            <div className="p-4 border rounded-lg">
+              <h3 className="font-semibold text-gray-700">Total Target</h3>
+              <p className="text-2xl font-bold">{TOTAL_TARGET.toLocaleString()} kg</p>
+              <div className="mt-2 h-2 bg-gray-200 rounded-full">
+                <div 
+                  className="h-2 bg-purple-600 rounded-full" 
+                  style={{ width: `${Math.min(100, (monthlyData.totalKg / TOTAL_TARGET) * 100)}%` }}
+                ></div>
+              </div>
+              <p className="text-sm mt-1">
+                {((monthlyData.totalKg / TOTAL_TARGET) * 100).toFixed(1)}% Achieved
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-4">
@@ -86,7 +349,7 @@ export const MonthlyReport = () => {
               </div>
             </div>
             <div className="mt-2">
-              <Badge className="bg-green-100 text-green-800">+12% from last month</Badge>
+              <Badge className="bg-blue-100 text-blue-800">+12% from last month</Badge>
             </div>
           </CardContent>
         </Card>
@@ -97,13 +360,16 @@ export const MonthlyReport = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Weight (kg)</p>
                 <p className="text-2xl font-bold text-gray-900">{monthlyData.totalKg.toLocaleString()}</p>
+                <p className="text-sm text-gray-500">Target: {TOTAL_TARGET.toLocaleString()} kg</p>
               </div>
               <div className="p-2 bg-green-50 rounded-lg">
                 <TrendingUp className="h-6 w-6 text-green-600" />
               </div>
             </div>
             <div className="mt-2">
-              <Badge className="bg-green-100 text-green-800">+8.5% from target</Badge>
+              <Badge className={getTargetStatus((monthlyData.totalKg / TOTAL_TARGET) * 100)}>
+                {((monthlyData.totalKg / TOTAL_TARGET) * 100).toFixed(1)}% of target
+              </Badge>
             </div>
           </CardContent>
         </Card>
@@ -114,6 +380,7 @@ export const MonthlyReport = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Revenue (ETB)</p>
                 <p className="text-2xl font-bold text-gray-900">{monthlyData.totalRevenue.toLocaleString()}</p>
+                <p className="text-sm text-gray-500">≈ {(monthlyData.totalRevenue / monthlyData.totalKg).toFixed(2)} ETB/kg</p>
               </div>
               <div className="p-2 bg-purple-50 rounded-lg">
                 <Trophy className="h-6 w-6 text-purple-600" />
@@ -137,7 +404,9 @@ export const MonthlyReport = () => {
               </div>
             </div>
             <div className="mt-2">
-              <Badge className="bg-orange-100 text-orange-800">Excellent</Badge>
+              <Badge className={getTargetStatus(monthlyData.targetAchievement)}>
+                {getTargetStatusText(monthlyData.targetAchievement)}
+              </Badge>
             </div>
           </CardContent>
         </Card>
@@ -154,6 +423,9 @@ export const MonthlyReport = () => {
               </CardTitle>
               <p className="text-sm text-gray-600">Highest collection volumes and efficiency ratings</p>
             </div>
+            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+              {selectedMonth.charAt(0).toUpperCase() + selectedMonth.slice(1)} {selectedYear}
+            </Badge>
           </div>
         </CardHeader>
         <CardContent>
@@ -249,8 +521,8 @@ export const MonthlyReport = () => {
                   ))}
                 </Pie>
                 <Tooltip formatter={(value, name, props) => [
-                  `${value} collections`,
-                  `Revenue: ${props.payload.revenue} ETB`
+                  `${Number(value).toLocaleString()} kg`,
+                  `Revenue: ${props.payload.revenue.toLocaleString()} ETB`
                 ]} />
               </PieChart>
             </ResponsiveContainer>

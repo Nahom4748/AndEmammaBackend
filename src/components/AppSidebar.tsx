@@ -1,10 +1,4 @@
-import { 
-  LayoutDashboard, ShieldCheck, TrendingUp, FileBarChart, CalendarRange,
-  UserPlus, ClipboardList, BriefcaseBusiness, Users2, ClipboardCheck, 
-  Building2, Truck, CircleDollarSign, Package, BarChart3, 
-  Store, ClipboardType, ReceiptText, Factory 
-} from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/components/contexts/AuthContext";
 import {
   Sidebar,
   SidebarContent,
@@ -14,105 +8,196 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarHeader,
 } from "@/components/ui/sidebar";
+import {
+  Home,
+  BarChart3,
+  Calendar,
+  Users,
+  Truck,
+  FileText,
+  Settings,
+  ClipboardList,
+  Target,
+  Store,
+  Package,
+  CreditCard,
+  UserCog,
+  ClipboardCheck,
+  History,
+  LogOut,
+  User,
+  Building2,
+  FolderKanban,
+  ChartLine,
+} from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
-// Grouped menu structure with icons matching text
+// ================= GROUPED MENU CONFIG =================
 const groupedMenuItems = [
   {
     label: "General",
     items: [
-      { title: "Dashboard", url: "/", icon: LayoutDashboard },
-      { title: "Performance", url: "/performance", icon: TrendingUp },
-      { title: "Reports", url: "/reports", icon: BarChart3 },
-      { title: "Cash Flow", url: "/cash-flow", icon: CircleDollarSign },
-      { title: "Collection team Report", url: "/PlanExecution", icon: CircleDollarSign },
+      { path: "/", label: "Dashboard", icon: Home, roles: ["Admin", "manager", "operation manager","user"] },
+      { path: "/reports", label: "Reports", icon: BarChart3, roles: ["Admin", "manager", "analyst"] },
+      { path: "/performance", label: "Performance", icon: Target, roles: ["Admin", "manager", "HR"] },
+      { path: "/AndemammaProducts", label: "Andemamma Products", icon: Target, roles: ["Admin", "manager", "HR"] },
+      { path: "/MamaProductEntry", label: "MamaProduct Entry", icon: Target, roles: ["Admin", "manager", "HR"] },
+      { path: "/MamasPayment", label: "Mamas Payment", icon: Target, roles: ["Admin", "manager", "HR"] },
     ],
   },
   {
-    label: "Admin",
+    label: "Planning & Assignments",
     items: [
-      { title: "Admin Dashboard", url: "/admin", icon: ShieldCheck },
-      { title: "Employee Management", url: "/EmployeeManagement", icon: BriefcaseBusiness },
-      { title: "Mamas Management", url: "/MamasManagement", icon: Users2 },
-      { title: "Customers Management", url: "/CustomersManagement", icon: Users2 },
-      { title: "Janitor Payment", url: "/JanitorPayment", icon: ReceiptText },
-      { title: "Suppliers History", url: "/SuppliersHistory", icon: ReceiptText },
+      { path: "/AssignmentsManager", label: "Assignments Manager", icon: ClipboardCheck, roles: ["Admin", "manager", "supervisor"] },
+      { path: "/MarketerWeeklyPlanner", label: "Marketer Weekly Planner", icon: Calendar, roles: ["Admin", "Marketer","manager", "marketer"] },
+      { path: "/weeklyPlanview", label: "View Weekly Plans", icon: ClipboardList, roles: ["Admin", "manager", "Marketer","planner", "marketer"] },
+      { path: "/PlanExecution", label: "Collection Plan Report", icon: ChartLine, roles: ["Admin","Marketer", "manager", "supervisor"] },
+      { path: "/ScheduleToday", label: "Today Schedules", icon: Calendar, roles: ["Admin", "Marketer","manager", "procurement"] },
     ],
   },
   {
-    label: "Marketer",
+    label: "Operations",
     items: [
-      { title: "Assign Marketers", url: "/AssignmentsManager", icon: UserPlus },
-      { title: "Marketer Weekly Planner", url: "/MarketerWeeklyPlanner", icon: CalendarRange },
+      { path: "/suppliers", label: "Suppliers", icon: Truck, roles: ["Admin", "manager", "procurement"] },
+      { path: "/SuppliersHistory", label: "Suppliers History", icon: History, roles: ["Admin", "Marketer","manager", "procurement"] },
+      { path: "/RegularCollectionPlanner", label: "Regular Collection Planner", icon: FolderKanban, roles: ["Admin", "Marketer","manager", "procurement"] },
+      { path: "/InStoreCollectionPlanner", label: "InStore Collection Planner", icon: Building2, roles: ["Admin", "Marketer","manager", "procurement"] },
+      { path: "/collection-sessions", label: "Instore Collection Sessions", icon: ClipboardList, roles: ["Admin", "manager", "operation manager","sales"] },
+      { path: "/SiteEvaluationForm", label: "Site Evaluation", icon: FileText, roles: ["Admin", "Marketer","manager", "evaluator"] },
     ],
   },
   {
-    label: "Collection Coordinator Manager",
+    label: "HR & Employees",
     items: [
-      { title: "Collection Data Entry", url: "/data-entry", icon: ClipboardType },
-      { title: "Weekly Collection Plan", url: "/WeeklyPlanCreator", icon: ClipboardList },
-      { title: "Weekly Plans", url: "/weeklyPlanview", icon: ClipboardCheck },
-      { title: "Plan Management", url: "/PlanManagement", icon: FileBarChart },
-      { title: "Sessions for Instore", url: "/collection-sessions", icon: CircleDollarSign },
+      { path: "/EmployeeManagement", label: "Employee Management", icon: UserCog, roles: ["Admin","Marketer", "HR"] },
+      { path: "/MamasManagement", label: "Mamas Management", icon: Users, roles: ["Admin", "HR"] },
     ],
   },
   {
-    label: "Store Management",
+    label: "Store & Inventory",
     items: [
-      { title: "Suppliers Management", url: "/suppliers", icon: Factory },
-      { title: "Customers Management", url: "/Customers", icon: Users2 },
-      { title: "Store Management", url: "/StoreManagement", icon: Store },
-      { title: "Item Management", url: "/ItemManagement", icon: Package },
-      { title: "Site Evaluation Form", url: "/SiteEvaluationForm", icon: Building2 },
+      { path: "/StoreManagement", label: "Store Management", icon: Store, roles: ["Admin", "manager", "store_keeper"] },
+      { path: "/ItemManagement", label: "Outlet Items", icon: Package, roles: ["Admin", "manager", "procurement"] },
     ],
   },
+  {
+    label: "Finance & Customers",
+    items: [
+      { path: "/cash-flow", label: "Cash Flow", icon: CreditCard, roles: ["Admin", "manager", "finance"] },
+      { path: "/JanitorPayment", label: "Janitor Payment", icon: CreditCard, roles: ["Admin", "manager", "finance"] },
+      { path: "/Customers", label: "Customers", icon: Users, roles: ["Admin", "manager", "sales"] },
+    ],
+  },
+  {
+    label: "Data Entry",
+    items: [
+      { path: "/data-entry", label: "Data Entry", icon: ClipboardList, roles: ["manager", "Admin","data_entry"] },
+    ],
+  }
 ];
 
 export function AppSidebar() {
   const location = useLocation();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+    toast.success("Logged out successfully");
+  };
+
+  const getUserInitials = () => {
+    if (!user) return "U";
+    return `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase() || "U";
+  };
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-6">
-        <div className="flex items-center gap-2">
-          <Truck className="h-8 w-8 text-primary" />
-          <div>
-            <h2 className="text-lg font-bold">AndE Mamma</h2>
-            <p className="text-sm text-muted-foreground">Paper Collection System</p>
-          </div>
-        </div>
-      </SidebarHeader>
+      <div className="flex flex-col h-full">
+        <SidebarContent>
+          {groupedMenuItems.map((group) => (
+            <SidebarGroup key={group.label}>
+              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items
+                    .filter(item => item.roles.includes(user?.role || ""))
+                    .map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <SidebarMenuItem key={item.path}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={location.pathname === item.path}
+                          >
+                            <Link to={item.path}>
+                              <Icon size={18} />
+                              <span>{item.label}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))}
+        </SidebarContent>
 
-      <SidebarContent>
-        {groupedMenuItems.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton 
-                      asChild
-                      isActive={location.pathname === item.url}
-                    >
-                      <Link 
-                        to={item.url} 
-                        className={`flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-100 ${
-                          location.pathname === item.url ? "bg-gray-200 font-semibold" : ""
-                        }`}
-                      >
-                        <item.icon className="w-5 h-5 text-primary" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
-      </SidebarContent>
+        {/* User profile & logout */}
+        <div className="mt-auto p-4 border-t">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="w-full justify-start h-12 px-3">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-green-100 text-green-800">
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col items-start">
+                    <span className="text-sm font-medium">
+                      {user?.first_name} {user?.last_name}
+                    </span>
+                    <span className="text-xs text-muted-foreground capitalize">
+                      {user?.role?.replace('_', ' ')}
+                    </span>
+                  </div>
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer">
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                className="cursor-pointer text-red-600 focus:text-red-600"
+                onClick={handleLogout}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
     </Sidebar>
   );
 }

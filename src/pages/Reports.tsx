@@ -7,39 +7,220 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarIcon, Download, Filter, FileText, BarChart3, TrendingUp } from "lucide-react";
+import { CalendarIcon, Download, Filter, FileText, BarChart3, TrendingUp, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MonthlyReport } from "@/components/MonthlyReport";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import axios from "axios";
+import { useToast } from "@/hooks/use-toast";
+
+// API base URL
+const API_BASE_URL = "http://localhost:5000";
+
+interface MonthlyReportData {
+  month: string;
+  regular: number;
+  instore: number;
+  total: number;
+}
+
+interface SupplierPerformance {
+  name: string;
+  collections: number;
+  regular: number;
+  instore: number;
+}
+
+interface CollectionType {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface YearlyStats {
+  year: string;
+  total_collections: number;
+  regular_collections: number;
+  instore_collections: number;
+  growth_percentage: number;
+}
 
 const Reports = () => {
   const [date, setDate] = useState<DateRange | undefined>();
+  const [monthlyReport, setMonthlyReport] = useState<MonthlyReportData[]>([]);
+  const [supplierPerformance, setSupplierPerformance] = useState<SupplierPerformance[]>([]);
+  const [collectionTypes, setCollectionTypes] = useState<CollectionType[]>([]);
+  const [yearlyStats, setYearlyStats] = useState<YearlyStats[]>([]);
+  const [isLoading, setIsLoading] = useState({
+    monthly: true,
+    suppliers: true,
+    collectionTypes: true,
+    yearly: true
+  });
+  const [error, setError] = useState({
+    monthly: '',
+    suppliers: '',
+    collectionTypes: '',
+    yearly: ''
+  });
+  const { toast } = useToast();
 
-  const monthlyReport = [
-    { month: 'Jan', regular: 180, instore: 65, total: 245 },
-    { month: 'Feb', regular: 220, instore: 60, total: 280 },
-    { month: 'Mar', regular: 250, instore: 70, total: 320 },
-    { month: 'Apr', regular: 210, instore: 85, total: 295 },
-    { month: 'May', regular: 285, instore: 100, total: 385 },
-  ];
+  // Fetch monthly report data
+  useEffect(() => {
+    const fetchMonthlyReport = async () => {
+      try {
+        setIsLoading(prev => ({ ...prev, monthly: true }));
+        const response = await axios.get(`${API_BASE_URL}/api/getYearlyDashboardStats`);
+        
+        if (response.data.status === "success") {
+          // Transform the data to match the expected format
+          const transformedData = response.data.data.map((item: any) => ({
+            month: item.month,
+            regular: parseFloat(item.regular) || 0,
+            instore: parseFloat(item.instore) || 0,
+            total: (parseFloat(item.regular) || 0) + (parseFloat(item.instore) || 0)
+          }));
+          setMonthlyReport(transformedData);
+        } else {
+          setError(prev => ({ ...prev, monthly: 'Failed to load monthly report data' }));
+          toast({
+            title: "Error",
+            description: "Failed to load monthly report data",
+            variant: "destructive",
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching monthly report:", err);
+        setError(prev => ({ ...prev, monthly: 'Failed to load monthly report data' }));
+        toast({
+          title: "Error",
+          description: "Failed to load monthly report data",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(prev => ({ ...prev, monthly: false }));
+      }
+    };
 
-  const supplierPerformance = [
-    { name: 'Addis Ababa University', collections: 45, efficiency: 96 },
-    { name: 'FDRE Ministry of Justice', collections: 38, efficiency: 94 },
-    { name: 'Ethiopian Chamber', collections: 32, efficiency: 98 },
-    { name: 'AACA Farms Commission', collections: 28, efficiency: 92 },
-    { name: 'Kotebe University', collections: 25, efficiency: 95 },
-  ];
+    fetchMonthlyReport();
+  }, [toast]);
 
-  const collectionTypes = [
-    { name: 'Carton', value: 145, color: '#0088FE' },
-    { name: 'Mixed', value: 112, color: '#00C49F' },
-    { name: 'SW', value: 89, color: '#FFBB28' },
-    { name: 'SC', value: 67, color: '#FF8042' },
-    { name: 'NP', value: 34, color: '#8884D8' },
-  ];
+  // Fetch supplier performance data
+  useEffect(() => {
+    const fetchSupplierPerformance = async () => {
+      try {
+        setIsLoading(prev => ({ ...prev, suppliers: true }));
+        const response = await axios.get(`${API_BASE_URL}/api/getSupplierPerformance`);
+        
+        if (response.data.status === "success") {
+          // Transform the data to match the expected format
+          const transformedData = response.data.data.map((item: any) => ({
+            name: item.name,
+            collections: parseFloat(item.collections) || 0,
+            regular: parseFloat(item.regular) || 0,
+            instore: parseFloat(item.instore) || 0
+          }));
+          setSupplierPerformance(transformedData);
+        } else {
+          setError(prev => ({ ...prev, suppliers: 'Failed to load supplier performance data' }));
+          toast({
+            title: "Error",
+            description: "Failed to load supplier performance data",
+            variant: "destructive",
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching supplier performance:", err);
+        setError(prev => ({ ...prev, suppliers: 'Failed to load supplier performance data' }));
+        toast({
+          title: "Error",
+          description: "Failed to load supplier performance data",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(prev => ({ ...prev, suppliers: false }));
+      }
+    };
+
+    fetchSupplierPerformance();
+  }, [toast]);
+
+  // Fetch collection type breakdown data
+  useEffect(() => {
+    const fetchCollectionTypes = async () => {
+      try {
+        setIsLoading(prev => ({ ...prev, collectionTypes: true }));
+        const response = await axios.get(`${API_BASE_URL}/api/getCollectionTypeBreakdown`);
+        
+        if (response.data.status === "success") {
+          // Define colors for the pie chart
+          const colors = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#A4DE6C', '#D0ED57', '#FFC0CB'];
+          
+          // Transform the data to match the expected format
+          const transformedData = response.data.data.map((item: any, index: number) => ({
+            name: item.name,
+            value: parseFloat(item.value) || 0,
+            color: colors[index % colors.length]
+          }));
+          setCollectionTypes(transformedData);
+        } else {
+          setError(prev => ({ ...prev, collectionTypes: 'Failed to load collection type data' }));
+          toast({
+            title: "Error",
+            description: "Failed to load collection type data",
+            variant: "destructive",
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching collection types:", err);
+        setError(prev => ({ ...prev, collectionTypes: 'Failed to load collection type data' }));
+        toast({
+          title: "Error",
+          description: "Failed to load collection type data",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(prev => ({ ...prev, collectionTypes: false }));
+      }
+    };
+
+    fetchCollectionTypes();
+  }, [toast]);
+
+  // Fetch yearly dashboard stats
+  useEffect(() => {
+    const fetchYearlyStats = async () => {
+      try {
+        setIsLoading(prev => ({ ...prev, yearly: true }));
+        const response = await axios.get(`${API_BASE_URL}/api/getYearlyDashboardStats`);
+        
+        if (response.data.status === "success") {
+          setYearlyStats(response.data.data);
+        } else {
+          setError(prev => ({ ...prev, yearly: 'Failed to load yearly stats' }));
+          toast({
+            title: "Error",
+            description: "Failed to load yearly stats",
+            variant: "destructive",
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching yearly stats:", err);
+        setError(prev => ({ ...prev, yearly: 'Failed to load yearly stats' }));
+        toast({
+          title: "Error",
+          description: "Failed to load yearly stats",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(prev => ({ ...prev, yearly: false }));
+      }
+    };
+
+    fetchYearlyStats();
+  }, [toast]);
 
   const reportTemplates = [
     {
@@ -74,6 +255,21 @@ const Reports = () => {
       default:
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  const downloadReport = (type: string) => {
+    toast({
+      title: "Download Started",
+      description: `${type} report download has started`,
+    });
+    
+    // In a real app, this would generate and download the report
+    setTimeout(() => {
+      toast({
+        title: "Download Complete",
+        description: `${type} report has been downloaded successfully`,
+      });
+    }, 2000);
   };
 
   return (
@@ -179,17 +375,33 @@ const Reports = () => {
                 <CardDescription>Regular vs in-store collections over time</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={monthlyReport}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="regular" fill="#0088FE" name="Regular" />
-                    <Bar dataKey="instore" fill="#00C49F" name="In-store" />
-                  </BarChart>
-                </ResponsiveContainer>
+                {isLoading.monthly ? (
+                  <div className="h-[300px] flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : error.monthly ? (
+                  <div className="h-[300px] flex items-center justify-center text-red-500">
+                    {error.monthly}
+                  </div>
+                ) : monthlyReport.length === 0 ? (
+                  <div className="h-[300px] flex items-center justify-center text-gray-500">
+                    No monthly data available
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={monthlyReport}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip 
+                        formatter={(value: number) => [`${value.toFixed(2)} kg`, 'Weight']}
+                      />
+                      <Legend />
+                      <Bar dataKey="regular" fill="#0088FE" name="Regular" />
+                      <Bar dataKey="instore" fill="#00C49F" name="In-store" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
 
@@ -199,25 +411,41 @@ const Reports = () => {
                 <CardDescription>Breakdown by collection type</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={collectionTypes}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {collectionTypes.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                {isLoading.collectionTypes ? (
+                  <div className="h-[300px] flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : error.collectionTypes ? (
+                  <div className="h-[300px] flex items-center justify-center text-red-500">
+                    {error.collectionTypes}
+                  </div>
+                ) : collectionTypes.length === 0 ? (
+                  <div className="h-[300px] flex items-center justify-center text-gray-500">
+                    No collection type data available
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={collectionTypes}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {collectionTypes.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value: number) => [`${value.toFixed(2)} kg`, 'Weight']}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -226,39 +454,51 @@ const Reports = () => {
           <Card>
             <CardHeader>
               <CardTitle>Top Performing Suppliers</CardTitle>
-              <CardDescription>Suppliers ranked by collection volume and efficiency</CardDescription>
+              <CardDescription>Suppliers ranked by collection volume</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">Supplier</th>
-                      <th className="text-right p-2">Collections</th>
-                      <th className="text-right p-2">Efficiency</th>
-                      <th className="text-right p-2">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {supplierPerformance.map((supplier, index) => (
-                      <tr key={index} className="border-b">
-                        <td className="p-2 font-medium">{supplier.name}</td>
-                        <td className="p-2 text-right">{supplier.collections}</td>
-                        <td className="p-2 text-right">
-                          <Badge variant={supplier.efficiency >= 95 ? "default" : "outline"}>
-                            {supplier.efficiency}%
-                          </Badge>
-                        </td>
-                        <td className="p-2 text-right">
-                          <Button variant="outline" size="sm">
-                            View Details
-                          </Button>
-                        </td>
+              {isLoading.suppliers ? (
+                <div className="h-64 flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : error.suppliers ? (
+                <div className="h-64 flex items-center justify-center text-red-500">
+                  {error.suppliers}
+                </div>
+              ) : supplierPerformance.length === 0 ? (
+                <div className="h-64 flex items-center justify-center text-gray-500">
+                  No supplier data available
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-2">Supplier</th>
+                        <th className="text-right p-2">Total Collections (kg)</th>
+                        <th className="text-right p-2">Regular (kg)</th>
+                        <th className="text-right p-2">In-store (kg)</th>
+                        <th className="text-right p-2">Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {supplierPerformance.map((supplier, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="p-2 font-medium">{supplier.name}</td>
+                          <td className="p-2 text-right">{supplier.collections.toFixed(2)}</td>
+                          <td className="p-2 text-right">{supplier.regular.toFixed(2)}</td>
+                          <td className="p-2 text-right">{supplier.instore.toFixed(2)}</td>
+                          <td className="p-2 text-right">
+                            <Button variant="outline" size="sm">
+                              View Details
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -292,7 +532,11 @@ const Reports = () => {
                       <span className="text-xs text-muted-foreground">
                         Last: {template.lastGenerated}
                       </span>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => downloadReport(template.title)}
+                      >
                         <Download className="mr-1 h-3 w-3" />
                         Download
                       </Button>
