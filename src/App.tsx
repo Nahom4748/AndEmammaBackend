@@ -39,6 +39,12 @@ import ScheduleToday from "./pages/Scheduletoday";
 import AndemammaProducts from "./pages/AndemammaProducts";
 import MamaProductEntry from "./pages/MamaProductEntry";
 import MamasPayment from "./pages/MamasPayment";
+import { MarketerAssignedSuppliers } from "./pages/MarketerAssignedSuppliers";
+import MarketerOrders from "./pages/MarketerOrders";
+import { MarketerDashboard } from "./pages/MarketerDashboard";
+import  CollectionCoordinatorDashboard  from "./pages/CollectionCoordinatorDashboard";
+import SupplierCollectionStatus from "./pages/SupplierCollectionData";
+import MarketerSupplierCollectionStatus from "./pages/MarketerSupplierCollectionStatus";
 
 const queryClient = new QueryClient();
 
@@ -203,11 +209,11 @@ const AppContent = () => {
                   <StoreManagement />
                 </ProtectedRoute>
               } />
-              <Route path="/PlanManagement" element={
+              {/* <Route path="/PlanManagement" element={
                 <ProtectedRoute allowedRoles={['Admin', "operation manager",'manager', 'planner']}>
                   <PlanManagement />
                 </ProtectedRoute>
-              } />
+              } /> */}
               <Route path="/ItemManagement" element={
                 <ProtectedRoute allowedRoles={['Admin', 'manager', 'procurement']}>
                   <ItemManagement />
@@ -226,6 +232,11 @@ const AppContent = () => {
               <Route path="/collection-sessions" element={
                 <ProtectedRoute allowedRoles={['Admin',"Marketer", "operation manager",'manager', 'sales']}>
                   <CollectionSessionsManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="/MarketerDashboard" element={
+                <ProtectedRoute allowedRoles={['Admin',"Marketer"]}>
+                  <MarketerDashboard />
                 </ProtectedRoute>
               } />
               <Route path="/AndemammaProducts" element={
@@ -253,13 +264,18 @@ const AppContent = () => {
                   <CustomersManagement />
                 </ProtectedRoute>
               } />
+              <Route path="/CollectionCoordinatorDashboard" element={
+                <ProtectedRoute allowedRoles={['Admin', 'manager', "sales", "operation manager"]}>
+                  <CollectionCoordinatorDashboard />
+                </ProtectedRoute>
+              } />
               <Route path="/JanitorPayment" element={
                 <ProtectedRoute allowedRoles={['Admin', 'manager', 'finance']}>
                   <JanitorPayment />
                 </ProtectedRoute>
               } />
               <Route path="/PlanExecution" element={
-                <ProtectedRoute allowedRoles={['Admin', 'manager', "operation manager",'supervisor']}>
+                <ProtectedRoute allowedRoles={['Admin', "regular coordination",'manager', "operation manager",'supervisor']}>
                   <PlanExecution />
                 </ProtectedRoute>
               } />
@@ -269,18 +285,38 @@ const AppContent = () => {
                 </ProtectedRoute>
               } />
               <Route path="/RegularCollectionPlanner" element={
-                <ProtectedRoute allowedRoles={['Admin', 'manager',"Marketer", 'procurement']}>
+                <ProtectedRoute allowedRoles={['Admin', "regular coordination",'manager',"Marketer", 'procurement']}>
                   <RegularCollectionPlanner />
                 </ProtectedRoute>
               } />
+              <Route path="/SupplierCollectionStatus" element={
+                <ProtectedRoute allowedRoles={['Admin', "operation manager","regular coordination",'manager',"Marketer", 'procurement']}>
+                  <SupplierCollectionStatus />
+                </ProtectedRoute>
+              } />
+              <Route path="/MarketerSupplierCollectionStatus" element={
+                <ProtectedRoute allowedRoles={['Admin', "operation manager","regular coordination",'manager',"Marketer", 'procurement']}>
+                  <MarketerSupplierCollectionStatus />
+                </ProtectedRoute>
+              } />
               <Route path="/InStoreCollectionPlanner" element={
-                <ProtectedRoute allowedRoles={['Admin', 'manager',"Marketer", 'procurement']}>
+                <ProtectedRoute allowedRoles={['Admin', 'manager',"Marketer",  "operation manager",'procurement']}>
                   <InStoreCollectionPlanner />
                 </ProtectedRoute>
               } />
               <Route path="/ScheduleToday" element={
                 <ProtectedRoute allowedRoles={['Admin', 'manager',"Marketer", 'procurement']}>
                   <ScheduleToday />
+                </ProtectedRoute>
+              } />
+              <Route path="/MarketerAssignedSuppliers" element={
+                <ProtectedRoute allowedRoles={['Admin', 'manager',"Marketer", 'procurement']}>
+                  <MarketerAssignedSuppliers />
+                </ProtectedRoute>
+              } />
+              <Route path="/MarketerOrders" element={
+                <ProtectedRoute allowedRoles={['Admin', 'manager',"Marketer", 'procurement']}>
+                  <MarketerOrders />
                 </ProtectedRoute>
               } />
               <Route path="/login" element={<Navigate to="/" replace />} />

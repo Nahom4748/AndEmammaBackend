@@ -77,12 +77,14 @@ export function AssignmentsManager() {
         const sectorData = sectorsRes.data.data || [];
 
         // Extract unique regions from suppliers
-        const uniqueRegions = Array.from(new Map(
-          supplierData.map(supplier => [supplier.region_id, {
-            id: supplier.region_id,
-            name: supplier.region_name
-          }])
-        ).values());
+        const uniqueRegions = Array.from(
+          new Map(
+            supplierData.map((supplier: Supplier) => [supplier.region_id, {
+              id: supplier.region_id,
+              name: supplier.region_name
+            }])
+          ).values()
+        ) as { id: number; name: string }[];
 
         // Filter only marketers
         const filteredMarketers = marketerData.filter(user => 

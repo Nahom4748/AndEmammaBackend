@@ -12,6 +12,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { CalendarIcon, ListChecks, Search, Car, User, Loader2, CheckCircle2 } from "lucide-react";
 import axios from "axios";
+import { useAuth } from "@/components/contexts/AuthContext";
 
 interface Supplier {
   id: number;
@@ -52,6 +53,7 @@ interface WeeklyPlan {
   coordinator?: string;
   marketer?: string;
   note?: string;
+  created_by?: number;
 }
 
 type Day = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat";
@@ -61,10 +63,12 @@ const DAYS: Day[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function WeeklyPlan() {
   const { toast } = useToast();
+  const { user } = useAuth();
+  console.log("user data in weekly plan:", user);
   const [query, setQuery] = useState("");
   const [supplierId, setSupplierId] = useState<number | null>(null);
   const [date, setDate] = useState<Date | undefined>(undefined);
-  const [type, setType] = useState<PlanType>("Regular");
+  const [type, setType] = useState<PlanType>(user?.role === "operation manager" ? "Instore" : "Regular");
   const [notes, setNotes] = useState("");
   const [driverId, setDriverId] = useState<number | null>(null);
   const [coordinatorId, setCoordinatorId] = useState<number | null>(null);
@@ -84,6 +88,9 @@ export default function WeeklyPlan() {
     saving: false,
     plans: false
   });
+
+  // Determine if user is operation manager
+  const isOperationManager = user?.role === "operation_manager";
 
   // SEO
   useEffect(() => {
@@ -132,8 +139,13 @@ export default function WeeklyPlan() {
         const marketorsRes = await axios.get("http://localhost:5000/users/Marketor");
         setMarketors(marketorsRes.data.data);
         
-        // Fetch all plans
-        const plansRes = await axios.get("http://localhost:5000/api/weekly-plan");
+        // Fetch plans based on user role
+        let plansEndpoint = "http://localhost:5000/api/weekly-plan";
+        if (isOperationManager) {
+          plansEndpoint += `?user_id=${user.id}`;
+        }
+        
+        const plansRes = await axios.get(plansEndpoint);
         setPlans(plansRes.data.data);
       } catch (error) {
         toast({
@@ -155,7 +167,7 @@ export default function WeeklyPlan() {
     };
 
     fetchData();
-  }, [toast]);
+  }, [toast, isOperationManager, user]);
 
   const filteredSuppliers = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -170,13 +182,19 @@ export default function WeeklyPlan() {
     const map: Record<string, WeeklyPlan[]> = {
       Mon: [], Tue: [], Wed: [], Thu: [], Fri: [], Sat: []
     };
-    plans.forEach((p) => { 
+    
+    // Filter plans based on user role
+    const filteredPlans = isOperationManager 
+      ? plans.filter(plan => plan.collectionType === "Instore")
+      : plans;
+    
+    filteredPlans.forEach((p) => { 
       if (map[p.day]) {
         map[p.day].push(p);
       }
     });
     return map;
-  }, [plans]);
+  }, [plans, isOperationManager]);
 
   const handleSave = async () => {
     if (!supplierId || !date) {
@@ -208,13 +226,18 @@ export default function WeeklyPlan() {
         driver_id: type === "Regular" ? driverId : null,
         coordinator_id: type === "Instore" ? coordinatorId : null,
         marketor_name: type === "Instore" ? marketorName : null,
-        createdBy: 1 // Assuming user ID 1 for now
+        created_by: user?.id || 1
       };
 
       await axios.post("http://localhost:5000/api/weekly-plan", { plans: [planData] });
       
-      // Refresh plans
-      const res = await axios.get("http://localhost:5000/api/weekly-plan");
+      // Refresh plans based on user role
+      let plansEndpoint = "http://localhost:5000/api/weekly-plan";
+      if (isOperationManager) {
+        plansEndpoint += `?user_id=${user.id}`;
+      }
+      
+      const res = await axios.get(plansEndpoint);
       setPlans(res.data.data);
 
       toast({
@@ -230,6 +253,11 @@ export default function WeeklyPlan() {
       setDriverId(null);
       setCoordinatorId(null);
       setMarketorName("");
+      
+      // Reset type based on user role
+      if (isOperationManager) {
+        setType("Instore");
+      }
     } catch (error) {
       toast({
         variant: "destructive",
@@ -247,7 +275,14 @@ export default function WeeklyPlan() {
         <SidebarTrigger />
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-green-800">Weekly Collection Plan</h1>
-          <p className="text-muted-foreground text-sm md:text-base">Plan collections for the week</p>
+          <p className="text-muted-foreground text-sm md:text-base">
+            {isOperationManager ? "Manage Instore collections" : "Plan collections for the week"}
+          </p>
+          {isOperationManager && (
+            <Badge variant="outline" className="mt-1 bg-blue-50 text-blue-700 border-blue-200">
+              Operation Manager View
+            </Badge>
+          )}
         </div>
       </header>
 
@@ -259,7 +294,12 @@ export default function WeeklyPlan() {
               <CardTitle className="flex items-center gap-2 text-green-800">
                 <ListChecks className="h-5 w-5" /> Create Collection Plan
               </CardTitle>
-              <CardDescription>Select supplier, type and date, then save</CardDescription>
+              <CardDescription>
+                {isOperationManager 
+                  ? "Create Instore collection plans" 
+                  : "Select supplier, type and date, then save"
+                }
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
               <div>
@@ -318,7 +358,7 @@ export default function WeeklyPlan() {
                 <Select 
                   value={type} 
                   onValueChange={(v) => setType(v as PlanType)}
-                  disabled={loading.collectionTypes}
+                  disabled={loading.collectionTypes || isOperationManager}
                 >
                   <SelectTrigger className="border-gray-200 focus:ring-green-300">
                     <SelectValue />
@@ -329,18 +369,23 @@ export default function WeeklyPlan() {
                         <Loader2 className="h-5 w-5 animate-spin text-green-600" />
                       </div>
                     ) : (
-                      collectionTypes.map((t) => (
-                        <SelectItem key={t.id} value={t.name} className="hover:bg-green-50">
-                          {t.name}
-                        </SelectItem>
-                      ))
+                      collectionTypes
+                        .filter(type => !isOperationManager || type.name === "Instore")
+                        .map((t) => (
+                          <SelectItem key={t.id} value={t.name} className="hover:bg-green-50">
+                            {t.name}
+                            {isOperationManager && t.name === "Instore" && (
+                              <span className="ml-2 text-xs text-blue-600">(Required for your role)</span>
+                            )}
+                          </SelectItem>
+                        ))
                     )}
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Driver selection for regular collection */}
-              {type === "Regular" && (
+              {type === "Regular" && !isOperationManager && (
                 <div>
                   <label className="text-sm font-medium text-green-800 mb-1 block">Select Driver</label>
                   <Select 
@@ -495,13 +540,21 @@ export default function WeeklyPlan() {
             <CardHeader className="bg-green-50 border-b border-green-100">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                 <div>
-                  <CardTitle className="text-green-800">Week Overview</CardTitle>
+                  <CardTitle className="text-green-800">
+                    {isOperationManager ? "My Instore Collections" : "Week Overview"}
+                  </CardTitle>
                   <CardDescription>
-                    All scheduled collections
+                    {isOperationManager 
+                      ? "Your scheduled Instore collections" 
+                      : "All scheduled collections"
+                    }
                   </CardDescription>
                 </div>
                 <Badge variant="outline" className="bg-white border-green-200 text-green-800 w-fit">
-                  {plans.length} planned collections
+                  {isOperationManager 
+                    ? `${plans.filter(p => p.collectionType === "Instore").length} Instore collections`
+                    : `${plans.length} planned collections`
+                  }
                 </Badge>
               </div>
             </CardHeader>
@@ -523,7 +576,7 @@ export default function WeeklyPlan() {
                       <div className="space-y-2">
                         {!groupedByDay[day] || groupedByDay[day].length === 0 ? (
                           <div className="text-center py-4 text-sm text-gray-500 border border-dashed border-gray-300 rounded-md">
-                            No collections scheduled
+                            No {isOperationManager ? "Instore " : ""}collections scheduled
                           </div>
                         ) : (
                           groupedByDay[day].map((p) => {
@@ -563,6 +616,11 @@ export default function WeeklyPlan() {
                                 {p.note && (
                                   <div className="text-xs mt-1 text-muted-foreground">
                                     Note: {p.note}
+                                  </div>
+                                )}
+                                {isOperationManager && p.created_by === user?.id && (
+                                  <div className="text-xs mt-1 text-blue-600 font-medium">
+                                    Created by you
                                   </div>
                                 )}
                               </div>

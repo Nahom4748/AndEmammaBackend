@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Target, Plus, Search, User } from "lucide-react";
+import { Calendar, MapPin, Target, Plus, Search, User, X } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
@@ -51,6 +51,7 @@ export function InStoreCollectionPlanner() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [supplierSearch, setSupplierSearch] = useState(""); // Search for supplier dropdown
 
   // Get user ID from authenticated user
   const userId = user?.user_id;
@@ -87,10 +88,9 @@ export function InStoreCollectionPlanner() {
     try {
       const response = await axios.get("http://localhost:5000/users");
       if (response.data.status === "success") {
-        // Filter users with collection coordinator role
+        // Filter users with collection coordinator role (exact match)
         const coordinatorUsers = response.data.data.filter(
-          (user: Coordinator) => user.company_role_name.toLowerCase().includes("collection coordinator") ||
-                                 user.company_role_name.toLowerCase().includes("regular coordination")
+          (user: Coordinator) => user.company_role_name.toLowerCase() === "collection coordinator"
         );
         setCoordinators(coordinatorUsers);
       } else {
@@ -128,6 +128,19 @@ export function InStoreCollectionPlanner() {
     
     return filtered;
   }, [suppliers, locationFilter, searchQuery]);
+
+  // Filter suppliers for dropdown search
+  const dropdownFilteredSuppliers = useMemo(() => {
+    if (!supplierSearch) return filteredSuppliers;
+    
+    const query = supplierSearch.toLowerCase();
+    return filteredSuppliers.filter(s => 
+      s.company_name.toLowerCase().includes(query) ||
+      s.contact_person.toLowerCase().includes(query) ||
+      s.location.toLowerCase().includes(query) ||
+      s.sector_name.toLowerCase().includes(query)
+    );
+  }, [filteredSuppliers, supplierSearch]);
 
   const uniqueLocations = useMemo(() => {
     const locations = new Set<string>();
@@ -214,6 +227,7 @@ export function InStoreCollectionPlanner() {
       setSelectedCoordinator(null);
       setSelectedDate("");
       setNotes("");
+      setSupplierSearch("");
     } catch (error: any) {
       console.error("Error saving plan:", error);
       let errorMessage = "Failed to save in-store collection plan";
@@ -350,28 +364,56 @@ export function InStoreCollectionPlanner() {
                 <Label htmlFor="supplier">Supplier *</Label>
                 <Select 
                   value={selectedSupplier?.toString() || ""} 
-                  onValueChange={(value) => setSelectedSupplier(Number(value))}
+                  onValueChange={(value) => {
+                    setSelectedSupplier(Number(value));
+                    setSupplierSearch(""); // Clear search when supplier is selected
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select supplier..." />
                   </SelectTrigger>
                   <SelectContent className="max-h-60 overflow-y-auto">
-                    {filteredSuppliers.length > 0 ? (
-                      filteredSuppliers.map((supplier) => (
+                    {/* Search input inside dropdown */}
+                    <div className="p-2 border-b">
+                      <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search suppliers..."
+                          value={supplierSearch}
+                          onChange={(e) => setSupplierSearch(e.target.value)}
+                          className="pl-8 h-9"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        {supplierSearch && (
+                          <X 
+                            className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSupplierSearch("");
+                            }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    
+                    {dropdownFilteredSuppliers.length > 0 ? (
+                      dropdownFilteredSuppliers.map((supplier) => (
                         <SelectItem key={supplier.id} value={supplier.id.toString()}>
                           <div className="space-y-1">
                             <div className="font-medium">{supplier.company_name}</div>
                             <div className="text-xs text-muted-foreground flex items-center gap-1">
                               <MapPin className="h-3 w-3" />
                               {supplier.location}
+                              <span className="ml-2">•</span>
+                              {supplier.contact_person}
                             </div>
                           </div>
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="no-suppliers" disabled>
-                        No suppliers found
-                      </SelectItem>
+                      <div className="p-4 text-center text-muted-foreground text-sm">
+                        No suppliers found matching your search
+                      </div>
                     )}
                   </SelectContent>
                 </Select>
@@ -413,7 +455,7 @@ export function InStoreCollectionPlanner() {
                 onValueChange={(value) => setSelectedCoordinator(Number(value))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select coordinator..." />
+                  <SelectValue placeholder="Select collection coordinator..." />
                 </SelectTrigger>
                 <SelectContent>
                   {coordinators.length > 0 ? (
@@ -422,7 +464,7 @@ export function InStoreCollectionPlanner() {
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4" />
                           <span>{coordinator.first_name} {coordinator.last_name}</span>
-                          <Badge variant="outline" className="ml-2">
+                          <Badge variant="outline" className="ml-2 text-xs">
                             {coordinator.company_role_name}
                           </Badge>
                         </div>
@@ -435,6 +477,11 @@ export function InStoreCollectionPlanner() {
                   )}
                 </SelectContent>
               </Select>
+              {coordinators.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No users found with "collection coordinator" role. Please check user roles.
+                </p>
+              )}
             </div>
 
             {/* Selected Supplier Details */}
@@ -517,6 +564,7 @@ export function InStoreCollectionPlanner() {
                   setSelectedCoordinator(null);
                   setSelectedDate("");
                   setNotes("");
+                  setSupplierSearch("");
                 }}
               >
                 Clear Form

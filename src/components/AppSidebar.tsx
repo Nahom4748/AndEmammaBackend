@@ -30,6 +30,16 @@ import {
   Building2,
   FolderKanban,
   ChartLine,
+  Box,
+  DollarSign,
+  FileSpreadsheet,
+  ClipboardType,
+  ShoppingCart,
+  UserCheck,
+  ListChecks,
+  ListTodo,
+  ClipboardPlus,
+  FileSearch,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -44,6 +54,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 
+
 // ================= GROUPED MENU CONFIG =================
 const groupedMenuItems = [
   {
@@ -52,36 +63,44 @@ const groupedMenuItems = [
       { path: "/", label: "Dashboard", icon: Home, roles: ["Admin", "manager", "operation manager","user"] },
       { path: "/reports", label: "Reports", icon: BarChart3, roles: ["Admin", "manager", "analyst"] },
       { path: "/performance", label: "Performance", icon: Target, roles: ["Admin", "manager", "HR"] },
-      { path: "/AndemammaProducts", label: "Andemamma Products", icon: Target, roles: ["Admin", "manager", "HR"] },
-      { path: "/MamaProductEntry", label: "MamaProduct Entry", icon: Target, roles: ["Admin", "manager", "HR"] },
-      { path: "/MamasPayment", label: "Mamas Payment", icon: Target, roles: ["Admin", "manager", "HR"] },
+      { path: "/AndemammaProducts", label: "Andemamma Products", icon: Box, roles: ["Admin", "manager", "HR"] },
+      { path: "/MamaProductEntry", label: "MamaProduct Entry", icon: ClipboardPlus, roles: ["Admin", "manager", "HR"] },
+      { path: "/MamasPayment", label: "Mamas Payment", icon: DollarSign, roles: ["Admin", "manager", "HR"] },
+      { path: "/MarketerDashboard", label: "Marketer Dashboard", icon: DollarSign, roles: ["Admin", "Marketer","manager", "HR"] },
+      { path: "/MarketerOrders", label: "Marketer Orders", icon: DollarSign, roles: ["Admin", "Marketer","manager", "HR"] },
+      { path: "/PlanExecution", label: "view plans", icon: DollarSign, roles: ["Admin","operation manager","regular coordination","manager", "HR"] },
     ],
   },
   {
     label: "Planning & Assignments",
     items: [
       { path: "/AssignmentsManager", label: "Assignments Manager", icon: ClipboardCheck, roles: ["Admin", "manager", "supervisor"] },
-      { path: "/MarketerWeeklyPlanner", label: "Marketer Weekly Planner", icon: Calendar, roles: ["Admin", "Marketer","manager", "marketer"] },
-      { path: "/weeklyPlanview", label: "View Weekly Plans", icon: ClipboardList, roles: ["Admin", "manager", "Marketer","planner", "marketer"] },
-      { path: "/PlanExecution", label: "Collection Plan Report", icon: ChartLine, roles: ["Admin","Marketer", "manager", "supervisor"] },
-      { path: "/ScheduleToday", label: "Today Schedules", icon: Calendar, roles: ["Admin", "Marketer","manager", "procurement"] },
+      { path: "/MarketerWeeklyPlanner", label: "Marketer Weekly Planner", icon: Calendar, roles: ["Admin", "Marketer","manager"] },
+      { path: "/weeklyPlanview", label: "View Weekly Plans", icon: ListChecks, roles: ["Admin", "manager", "planner"] },
+      { path: "/PlanExecution", label: "Collection Plan Report", icon: ChartLine, roles: ["Admin", "manager", "supervisor"] },
+      { path: "/ScheduleToday", label: "Today Schedules", icon: ListTodo, roles: ["Admin","manager", "procurement"] },
+      { path: "/MarketerAssignedSuppliers", label: "view Assigned Suppliers", icon: UserCheck, roles: ["Admin", "Marketer","manager", "procurement"] },
+      { path: "/CollectionCoordinatorDashboard", label: "CollectionCoordinatorDashboard", icon: UserCheck, roles: ["Admin", "operation manager","manager", "procurement"] },
+      { path: "/RegularCollectionPlanner", label: "RegularCollectionPlanner", icon: UserCheck, roles: ["Admin", "regular coordination","manager", "procurement"] },
+      { path: "/SupplierCollectionStatus", label: "Supplier Collection Status", icon: UserCheck, roles: ["Admin", "regular coordination","operation manager","manager", "procurement"] },
+      { path: "/MarketerSupplierCollectionStatus", label: "Supplier Collection Status", icon: UserCheck, roles: ["Admin", "Marketer","manager", "procurement"] },
     ],
   },
   {
     label: "Operations",
     items: [
       { path: "/suppliers", label: "Suppliers", icon: Truck, roles: ["Admin", "manager", "procurement"] },
-      { path: "/SuppliersHistory", label: "Suppliers History", icon: History, roles: ["Admin", "Marketer","manager", "procurement"] },
-      { path: "/RegularCollectionPlanner", label: "Regular Collection Planner", icon: FolderKanban, roles: ["Admin", "Marketer","manager", "procurement"] },
-      { path: "/InStoreCollectionPlanner", label: "InStore Collection Planner", icon: Building2, roles: ["Admin", "Marketer","manager", "procurement"] },
+      { path: "/SuppliersHistory", label: "Suppliers History", icon: History, roles: ["Admin","manager", "procurement"] },
+      { path: "/RegularCollectionPlanner", label: "Regular Collection Planner", icon: FolderKanban, roles: ["Admin", "manager", "procurement"] },
+      { path: "/InStoreCollectionPlanner", label: "InStore Collection Planner", icon: Store,  roles: ["Admin", "manager", "operation manager", "procurement"] },
       { path: "/collection-sessions", label: "Instore Collection Sessions", icon: ClipboardList, roles: ["Admin", "manager", "operation manager","sales"] },
-      { path: "/SiteEvaluationForm", label: "Site Evaluation", icon: FileText, roles: ["Admin", "Marketer","manager", "evaluator"] },
+      { path: "/SiteEvaluationForm", label: "Site Evaluation", icon: FileSearch, roles: ["Admin", "manager", "evaluator"] },
     ],
   },
   {
     label: "HR & Employees",
     items: [
-      { path: "/EmployeeManagement", label: "Employee Management", icon: UserCog, roles: ["Admin","Marketer", "HR"] },
+      { path: "/EmployeeManagement", label: "Employee Management", icon: UserCog, roles: ["Admin", "HR"] },
       { path: "/MamasManagement", label: "Mamas Management", icon: Users, roles: ["Admin", "HR"] },
     ],
   },
@@ -96,14 +115,14 @@ const groupedMenuItems = [
     label: "Finance & Customers",
     items: [
       { path: "/cash-flow", label: "Cash Flow", icon: CreditCard, roles: ["Admin", "manager", "finance"] },
-      { path: "/JanitorPayment", label: "Janitor Payment", icon: CreditCard, roles: ["Admin", "manager", "finance"] },
-      { path: "/Customers", label: "Customers", icon: Users, roles: ["Admin", "manager", "sales"] },
+      { path: "/JanitorPayment", label: "Janitor Payment", icon: DollarSign, roles: ["Admin", "manager", "finance"] },
+      { path: "/Customers", label: "Customers", icon: ShoppingCart, roles: ["Admin", "manager", "sales"] },
     ],
   },
   {
     label: "Data Entry",
     items: [
-      { path: "/data-entry", label: "Data Entry", icon: ClipboardList, roles: ["manager", "Admin","data_entry"] },
+      { path: "/data-entry", label: "Data Entry", icon: FileSpreadsheet, roles: ["manager", "Admin","data_entry"] },
     ],
   }
 ];
@@ -128,33 +147,36 @@ export function AppSidebar() {
     <Sidebar>
       <div className="flex flex-col h-full">
         <SidebarContent>
-          {groupedMenuItems.map((group) => (
-            <SidebarGroup key={group.label}>
-              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {group.items
-                    .filter(item => item.roles.includes(user?.role || ""))
-                    .map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <SidebarMenuItem key={item.path}>
-                          <SidebarMenuButton
-                            asChild
-                            isActive={location.pathname === item.path}
-                          >
-                            <Link to={item.path}>
-                              <Icon size={18} />
-                              <span>{item.label}</span>
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          ))}
+          {groupedMenuItems
+            // ✅ Only show groups with at least one accessible item
+            .filter(group => group.items.some(item => item.roles.includes(user?.role || "")))
+            .map((group) => (
+              <SidebarGroup key={group.label}>
+                <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {group.items
+                      .filter(item => item.roles.includes(user?.role || ""))
+                      .map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <SidebarMenuItem key={item.path}>
+                            <SidebarMenuButton
+                              asChild
+                              isActive={location.pathname === item.path}
+                            >
+                              <Link to={item.path}>
+                                <Icon size={18} />
+                                <span>{item.label}</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ))}
         </SidebarContent>
 
         {/* User profile & logout */}
