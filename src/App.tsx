@@ -45,6 +45,7 @@ import { MarketerDashboard } from "./pages/MarketerDashboard";
 import  CollectionCoordinatorDashboard  from "./pages/CollectionCoordinatorDashboard";
 import SupplierCollectionStatus from "./pages/SupplierCollectionData";
 import MarketerSupplierCollectionStatus from "./pages/MarketerSupplierCollectionStatus";
+import ProductInnovations from "./pages/ProductInnovations";
 
 const queryClient = new QueryClient();
 
@@ -227,6 +228,11 @@ const AppContent = () => {
               <Route path="/Customers" element={
                 <ProtectedRoute allowedRoles={['Admin', 'manager', 'sales']}>
                   <Customers />
+                </ProtectedRoute>
+              } />
+              <Route path="/ProductInnovations" element={
+                <ProtectedRoute allowedRoles={['Admin', 'manager', 'sales']}>
+                  <ProductInnovations />
                 </ProtectedRoute>
               } />
               <Route path="/collection-sessions" element={
